@@ -1,0 +1,109 @@
+import {
+  afterNextRender,
+  Component,
+  inject,
+  signal
+} from '@angular/core';
+
+import {
+  Router,
+  RouterLink,
+  RouterLinkActive
+} from '@angular/router';
+
+import { firstValueFrom } from 'rxjs';
+
+import { MenuItem } from 'primeng/api';
+
+import { Auth } from '../../services/auth';
+
+@Component({
+  selector: 'app-navbar',
+  imports: [
+    RouterLink,
+    RouterLinkActive
+  ],
+  templateUrl: './navbar.html',
+  styleUrl: './navbar.scss'
+})
+export class Navbar {
+
+  private readonly auth = inject(Auth);
+  private readonly router = inject(Router);
+
+  readonly collapsed = signal(false);
+  readonly loggingOut = signal(false);
+  readonly logoutError = signal('');
+
+  readonly items: MenuItem[] = [
+    {
+      label: 'Inicio',
+      icon: 'pi pi-home',
+      routerLink: '/home'
+    },
+    {
+      label: 'Usuarios',
+      icon: 'pi pi-users',
+      routerLink: '/usuarios'
+    },
+    {
+      label: 'Configuración',
+      icon: 'pi pi-cog',
+      routerLink: '/configuracion'
+    }
+  ];
+
+  constructor() {
+
+    // En pantallas chicas arranca colapsado.
+    afterNextRender(() => {
+
+      if (
+        window.matchMedia(
+          '(max-width: 768px)'
+        ).matches
+      ) {
+        this.collapsed.set(true);
+      }
+
+    });
+  }
+
+  toggleNavbar(): void {
+    this.collapsed.update(
+      value => !value
+    );
+  }
+
+  async logout(): Promise<void> {
+
+    if (this.loggingOut()) {
+      return;
+    }
+
+    this.loggingOut.set(true);
+    this.logoutError.set('');
+
+    try {
+
+      await firstValueFrom(
+        this.auth.logout()
+      );
+
+      await this.router.navigateByUrl(
+        '/login'
+      );
+
+    } catch {
+
+      this.logoutError.set(
+        'No se pudo cerrar la sesión.'
+      );
+
+    } finally {
+
+      this.loggingOut.set(false);
+
+    }
+  }
+}

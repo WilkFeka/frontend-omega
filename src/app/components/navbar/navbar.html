@@ -1,0 +1,158 @@
+<aside
+  class="sidebar"
+  [class.collapsed]="collapsed()"
+  aria-label="Navegación principal"
+>
+
+  <!-- HEADER -->
+
+  <header class="sidebar-header">
+
+    <button
+      type="button"
+      class="toggle-button"
+      (click)="toggleNavbar()"
+      [attr.aria-expanded]="!collapsed()"
+      [attr.aria-label]="
+        collapsed()
+          ? 'Expandir menú'
+          : 'Contraer menú'
+      "
+    >
+      <i
+        class="pi pi-bars"
+        aria-hidden="true"
+      ></i>
+    </button>
+
+  </header>
+
+
+  <!-- NAVEGACIÓN -->
+
+  <nav
+    class="sidebar-nav"
+    aria-label="Menú principal"
+  >
+
+    <ul class="nav-list">
+
+      @for (
+        item of items;
+        track item.routerLink
+      ) {
+
+        @if (item.visible !== false) {
+
+          <li class="nav-list-item">
+
+            <a
+              class="nav-item"
+              [routerLink]="item.routerLink"
+              routerLinkActive="active"
+              [routerLinkActiveOptions]="{
+                exact: item.routerLink === '/home'
+              }"
+              ariaCurrentWhenActive="page"
+              [attr.aria-label]="item.label"
+              [attr.title]="
+                collapsed()
+                  ? item.label
+                  : null
+              "
+            >
+
+              <span class="nav-icon">
+                <i
+                  [class]="item.icon"
+                  aria-hidden="true"
+                ></i>
+              </span>
+
+              <span class="nav-label">
+                {{ item.label }}
+              </span>
+
+            </a>
+
+          </li>
+
+        }
+
+      }
+
+    </ul>
+
+  </nav>
+
+
+  <!-- FOOTER -->
+
+  <footer class="sidebar-footer">
+
+    @if (logoutError()) {
+
+      <div
+        class="logout-error"
+        role="alert"
+      >
+        <i
+          class="pi pi-exclamation-circle"
+          aria-hidden="true"
+        ></i>
+
+        <span>
+          {{ logoutError() }}
+        </span>
+      </div>
+
+    }
+
+    <button
+      type="button"
+      class="logout-button"
+      (click)="logout()"
+      [disabled]="loggingOut()"
+      aria-label="Cerrar sesión"
+      [attr.title]="
+        collapsed()
+          ? 'Cerrar sesión'
+          : null
+      "
+    >
+
+      <span class="nav-icon">
+
+        @if (loggingOut()) {
+
+          <i
+            class="pi pi-spinner pi-spin"
+            aria-hidden="true"
+          ></i>
+
+        } @else {
+
+          <i
+            class="pi pi-sign-out"
+            aria-hidden="true"
+          ></i>
+
+        }
+
+      </span>
+
+      <span class="nav-label">
+
+        @if (loggingOut()) {
+          Cerrando...
+        } @else {
+          Cerrar sesión
+        }
+
+      </span>
+
+    </button>
+
+  </footer>
+
+</aside>
