@@ -70,6 +70,7 @@
           "defaultConfiguration": "production"
         },
         "serve": {
+          "options": {"allowedHosts": ["omegasm.com.ar", "reyser.omegasm.com.ar", "demo.omegasm.com.ar"]},
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {

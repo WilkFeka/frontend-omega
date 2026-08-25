@@ -102,8 +102,9 @@ export class Login {
       }
 
       if (httpError.status === 403) {
+        console.log(httpError)
         this.error.set(
-          'El usuario se encuentra inactivo.'
+          httpError.error.detail || 'No tenés permisos para iniciar sesión.'
         );
 
         return;

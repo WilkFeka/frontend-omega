@@ -17,8 +17,11 @@ export const appConfig: ApplicationConfig = {
     // provideClientHydration(),
 
     providePrimeNG({
-      theme:{ preset: Aura },
+      theme:{ preset: Aura,
+              options: {darkModeSelector: false}
+       },
       license: environment.primeNG_key,
+      
     }),
 
     provideHttpClient(
