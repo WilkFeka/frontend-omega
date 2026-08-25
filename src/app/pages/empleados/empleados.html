@@ -1,0 +1,565 @@
+<p-toast
+  position="bottom-right"
+  [life]="3000"
+/>
+
+<section class="employees-page">
+
+  <header class="page-header">
+
+    <div>
+      <span class="page-eyebrow">
+        Personal
+      </span>
+
+      <h1>Empleados</h1>
+
+      <p>
+        Gestioná el personal de la empresa.
+      </p>
+    </div>
+
+
+    <button
+      pButton
+      type="button"
+      class="primary-button"
+      (click)="openCreate()"
+    >
+      <i class="pi pi-plus"></i>
+      Nuevo empleado
+    </button>
+
+  </header>
+
+
+  <!-- ====================== STATS ====================== -->
+
+  <div class="stats-grid">
+
+    <article class="stat-card">
+
+      <div class="stat-icon">
+        <i class="pi pi-id-card"></i>
+      </div>
+
+      <div>
+        <span>Total</span>
+        <strong>{{ employees().length }}</strong>
+      </div>
+
+    </article>
+
+
+    <article class="stat-card">
+
+      <div class="stat-icon matricula">
+        <i class="pi pi-verified"></i>
+      </div>
+
+      <div>
+        <span>Con matrícula</span>
+        <strong>{{ withMatricula() }}</strong>
+      </div>
+
+    </article>
+
+
+    <article class="stat-card">
+
+      <div class="stat-icon phone">
+        <i class="pi pi-phone"></i>
+      </div>
+
+      <div>
+        <span>Con teléfono</span>
+        <strong>{{ withPhone() }}</strong>
+      </div>
+
+    </article>
+
+
+    <article class="stat-card">
+
+      <div class="stat-icon entry">
+        <i class="pi pi-calendar"></i>
+      </div>
+
+      <div>
+        <span>Con fecha de ingreso</span>
+        <strong>{{ withEntryDate() }}</strong>
+      </div>
+
+    </article>
+
+  </div>
+
+
+  <!-- ====================== TABLE ====================== -->
+
+  <section class="table-card">
+
+    <div class="table-toolbar">
+
+      <div>
+        <h2>Empleados</h2>
+
+        <span>
+          {{ filteredEmployees().length }}
+          resultados
+        </span>
+      </div>
+
+
+      <div class="search-wrapper">
+
+        <i
+          class="pi pi-search"
+          aria-hidden="true"
+        ></i>
+
+        <input
+          pInputText
+          type="search"
+          placeholder="Buscar empleado..."
+          aria-label="Buscar empleado"
+          [ngModel]="search()"
+          (ngModelChange)="search.set($event)"
+        />
+
+      </div>
+
+    </div>
+
+
+    <p-table
+      [value]="filteredEmployees()"
+      [loading]="loading()"
+      [paginator]="filteredEmployees().length > 10"
+      [rows]="10"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      [scrollable]="true"
+      styleClass="employees-table"
+    >
+
+      <ng-template #header>
+
+        <tr>
+          <th>Empleado</th>
+          <th>Matrícula</th>
+          <th>Teléfono</th>
+          <th>Dirección</th>
+          <th>Fecha nac.</th>
+          <th>Fecha ingreso</th>
+
+          <th class="actions-column">
+            Acciones
+          </th>
+        </tr>
+
+      </ng-template>
+
+
+      <ng-template
+        #body
+        let-employee
+      >
+
+        <tr>
+
+          <td>
+
+            <div class="employee-cell">
+
+              <div class="avatar">
+                {{
+                  employee.nombre
+                    .charAt(0)
+                    .toUpperCase()
+                }}
+              </div>
+
+              <span>
+                {{ getFullName(employee) }}
+              </span>
+
+            </div>
+
+          </td>
+
+
+          <td>
+
+            @if (employee.matricula) {
+
+              <span class="matricula-badge">
+                {{ employee.matricula }}
+              </span>
+
+            } @else {
+              <span class="empty-value">-</span>
+            }
+
+          </td>
+
+
+          <td>
+            {{ employee.telefono || '-' }}
+          </td>
+
+
+          <td>
+            {{ employee.direccion || '-' }}
+          </td>
+
+
+          <td>
+            {{ formatDate(employee.fecha_nacimiento) }}
+          </td>
+
+
+          <td>
+            {{ formatDate(employee.fecha_ingreso) }}
+          </td>
+
+
+          <td>
+
+            <div class="actions">
+
+              <button
+                type="button"
+                class="icon-button"
+                aria-label="Editar empleado"
+                title="Editar"
+                (click)="openEdit(employee)"
+              >
+                <i class="pi pi-pencil"></i>
+              </button>
+
+
+              <button
+                type="button"
+                class="icon-button danger"
+                aria-label="Eliminar empleado"
+                title="Eliminar"
+                (click)="askDelete(employee)"
+              >
+                <i class="pi pi-trash"></i>
+              </button>
+
+            </div>
+
+          </td>
+
+        </tr>
+
+      </ng-template>
+
+
+      <ng-template #emptymessage>
+
+        <tr>
+
+          <td colspan="7">
+
+            <div class="empty-state">
+
+              <i class="pi pi-id-card"></i>
+
+              <strong>
+                No hay empleados
+              </strong>
+
+              <span>
+                No encontramos empleados
+                con los filtros actuales.
+              </span>
+
+            </div>
+
+          </td>
+
+        </tr>
+
+      </ng-template>
+
+    </p-table>
+
+  </section>
+
+</section>
+
+
+<!-- ====================== CREAR / EDITAR ====================== -->
+
+<p-dialog
+  [visible]="dialogVisible()"
+  (visibleChange)="dialogVisible.set($event)"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [header]="
+    editingId() === null
+      ? 'Nuevo empleado'
+      : 'Editar empleado'
+  "
+  [style]="{
+    width: 'min(760px, calc(100vw - 32px))'
+  }"
+  styleClass="employee-dialog"
+>
+
+  <form
+    class="employee-form"
+    (ngSubmit)="saveEmployee()"
+  >
+
+    <div class="form-grid">
+
+      <div class="field">
+
+        <label for="nombre">
+          Nombre
+          <span>*</span>
+        </label>
+
+        <input
+          pInputText
+          id="nombre"
+          name="nombre"
+          [(ngModel)]="form.nombre"
+          autocomplete="given-name"
+          required
+        />
+
+      </div>
+
+
+      <div class="field">
+
+        <label for="apellido">
+          Apellido
+          <span>*</span>
+        </label>
+
+        <input
+          pInputText
+          id="apellido"
+          name="apellido"
+          [(ngModel)]="form.apellido"
+          autocomplete="family-name"
+          required
+        />
+
+      </div>
+
+
+      <div class="field">
+
+        <label for="matricula">
+          Matrícula
+        </label>
+
+        <input
+          pInputText
+          id="matricula"
+          name="matricula"
+          [(ngModel)]="form.matricula"
+        />
+
+      </div>
+
+
+      <div class="field">
+
+        <label for="telefono">
+          Teléfono
+        </label>
+
+        <input
+          pInputText
+          id="telefono"
+          name="telefono"
+          type="tel"
+          [(ngModel)]="form.telefono"
+          autocomplete="tel"
+        />
+
+      </div>
+
+
+      <div class="field full-width">
+
+        <label for="direccion">
+          Dirección
+        </label>
+
+        <input
+          pInputText
+          id="direccion"
+          name="direccion"
+          [(ngModel)]="form.direccion"
+          autocomplete="street-address"
+        />
+
+      </div>
+
+
+      <div class="field">
+
+        <label for="fecha_nacimiento">
+          Fecha de nacimiento
+          <span>*</span>
+        </label>
+
+        <input
+          pInputText
+          id="fecha_nacimiento"
+          name="fecha_nacimiento"
+          type="date"
+          [(ngModel)]="form.fecha_nacimiento"
+          required
+        />
+
+      </div>
+
+
+      <div class="field">
+
+        <label for="fecha_ingreso">
+          Fecha de ingreso
+        </label>
+
+        <input
+          pInputText
+          id="fecha_ingreso"
+          name="fecha_ingreso"
+          type="date"
+          [(ngModel)]="form.fecha_ingreso"
+        />
+
+      </div>
+
+    </div>
+
+
+    <div class="dialog-actions">
+
+      <button
+        type="button"
+        class="secondary-button"
+        (click)="closeDialog()"
+        [disabled]="saving()"
+      >
+        Cancelar
+      </button>
+
+
+      <button
+        pButton
+        type="submit"
+        class="primary-button"
+        [disabled]="saving()"
+      >
+
+        @if (saving()) {
+
+          <i class="pi pi-spinner pi-spin"></i>
+          Guardando...
+
+        } @else {
+
+          <i class="pi pi-check"></i>
+          Guardar
+
+        }
+
+      </button>
+
+    </div>
+
+  </form>
+
+</p-dialog>
+
+
+<!-- ====================== ELIMINAR ====================== -->
+
+<p-dialog
+  [visible]="confirmVisible()"
+  (visibleChange)="confirmVisible.set($event)"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  header="Eliminar empleado"
+  [style]="{
+    width: 'min(460px, calc(100vw - 32px))'
+  }"
+>
+
+  <div class="confirm-content">
+
+    <div class="confirm-icon">
+      <i class="pi pi-exclamation-triangle"></i>
+    </div>
+
+    <div>
+
+      <strong>
+        ¿Eliminar empleado?
+      </strong>
+
+      <p>
+        Se eliminará a
+        <strong>
+          {{ employeeToDelete()?.apellido }},
+          {{ employeeToDelete()?.nombre }}
+        </strong>.
+      </p>
+
+      <p>
+        Esta acción no se puede deshacer.
+      </p>
+
+    </div>
+
+  </div>
+
+
+  <div class="dialog-actions">
+
+    <button
+      type="button"
+      class="secondary-button"
+      (click)="confirmVisible.set(false)"
+      [disabled]="saving()"
+    >
+      Cancelar
+    </button>
+
+
+    <button
+      type="button"
+      class="danger-button"
+      (click)="deleteEmployee()"
+      [disabled]="saving()"
+    >
+
+      @if (saving()) {
+
+        <i class="pi pi-spinner pi-spin"></i>
+
+      } @else {
+
+        <i class="pi pi-trash"></i>
+
+      }
+
+      Eliminar
+
+    </button>
+
+  </div>
+
+</p-dialog>
