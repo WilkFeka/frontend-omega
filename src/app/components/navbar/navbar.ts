@@ -1,5 +1,4 @@
 import {
-  afterNextRender,
   Component,
   inject,
   signal
@@ -12,10 +11,10 @@ import {
 } from '@angular/router';
 
 import { firstValueFrom } from 'rxjs';
-
 import { MenuItem } from 'primeng/api';
 
 import { Auth } from '../../services/auth';
+
 
 @Component({
   selector: 'app-navbar',
@@ -31,7 +30,7 @@ export class Navbar {
   private readonly auth = inject(Auth);
   private readonly router = inject(Router);
 
-  readonly collapsed = signal(false);
+  readonly collapsed = signal(true);
   readonly loggingOut = signal(false);
   readonly logoutError = signal('');
 
@@ -53,30 +52,18 @@ export class Navbar {
     }
   ];
 
-  constructor() {
-
-    // En pantallas chicas arranca colapsado.
-    afterNextRender(() => {
-
-      if (
-        window.matchMedia(
-          '(max-width: 768px)'
-        ).matches
-      ) {
-        this.collapsed.set(true);
-      }
-
-    });
-  }
 
   toggleNavbar(): void {
-    this.collapsed.update(
-      value => !value
-    );
+    this.collapsed.update(value => !value);
   }
 
-  async logout(): Promise<void> {
 
+  collapseNavbar(): void {
+    this.collapsed.set(true);
+  }
+
+
+  async logout(): Promise<void> {
     if (this.loggingOut()) {
       return;
     }
@@ -85,7 +72,6 @@ export class Navbar {
     this.logoutError.set('');
 
     try {
-
       await firstValueFrom(
         this.auth.logout()
       );
@@ -95,15 +81,12 @@ export class Navbar {
       );
 
     } catch {
-
       this.logoutError.set(
         'No se pudo cerrar la sesión.'
       );
 
     } finally {
-
       this.loggingOut.set(false);
-
     }
   }
 }
