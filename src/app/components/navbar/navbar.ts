@@ -49,6 +49,11 @@ export class Navbar {
       label: 'Configuración',
       icon: 'pi pi-cog',
       routerLink: '/configuracion'
+    },
+    {
+      label: 'Empleados',
+      icon: 'pi pi-id-card',
+      routerLink: '/empleados'
     }
   ];
 
