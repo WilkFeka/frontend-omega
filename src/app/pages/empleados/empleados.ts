@@ -9,12 +9,14 @@ import { InputText } from 'primeng/inputtext';
 import { MessageService } from 'primeng/api';
 import { TableModule } from 'primeng/table';
 import { ToastModule } from 'primeng/toast';
+import { Select } from 'primeng/select';
 
 import { Api } from '../../services/api';
 
 import {
   CreateEmployeeRequest,
   Employee,
+  EmployeeGroup,
   UpdateEmployeeRequest
 } from '../../models/employee.model';
 
@@ -24,9 +26,11 @@ interface EmployeeForm {
   apellido: string;
   direccion: string;
   matricula: string;
+  gremio: string;
   telefono: string;
   fecha_nacimiento: string;
   fecha_ingreso: string;
+  group_id: number | null;
 }
 
 
@@ -38,7 +42,8 @@ interface EmployeeForm {
     DialogModule,
     InputText,
     TableModule,
-    ToastModule
+    ToastModule,
+    Select
   ],
   providers: [MessageService],
   templateUrl: './empleados.html',
@@ -53,12 +58,20 @@ export class Empleados implements OnInit {
   readonly loading = signal(false);
   readonly saving = signal(false);
   readonly search = signal('');
+  readonly groupSearch = signal('');
+  readonly activeSection = signal<'employees' | 'groups'>('employees');
+  readonly groups = signal<EmployeeGroup[]>([]);
 
   readonly dialogVisible = signal(false);
   readonly confirmVisible = signal(false);
+  readonly groupDialogVisible = signal(false);
+  readonly groupConfirmVisible = signal(false);
 
   readonly editingId = signal<number | null>(null);
   readonly employeeToDelete = signal<Employee | null>(null);
+  readonly editingGroupId = signal<number | null>(null);
+  readonly groupToDelete = signal<EmployeeGroup | null>(null);
+  groupName = '';
 
   form: EmployeeForm = this.createEmptyForm();
 
@@ -76,6 +89,8 @@ export class Empleados implements OnInit {
         employee.apellido,
         employee.direccion,
         employee.matricula,
+        employee.gremio,
+        employee.group?.nombre,
         employee.telefono
       ];
 
@@ -101,8 +116,32 @@ export class Empleados implements OnInit {
   });
 
 
+  readonly filteredGroups = computed(() => {
+    const term = this.groupSearch().trim().toLowerCase();
+    return this.groups().filter(group =>
+      !term || group.nombre.toLowerCase().includes(term)
+    );
+  });
+
+
+  readonly groupOptions = computed(() => [
+    { label: 'Sin grupo', value: null },
+    ...this.groups().map(group => ({ label: group.nombre, value: group.id }))
+  ]);
+
+
   ngOnInit(): void {
-    void this.loadEmployees();
+    void Promise.all([this.loadEmployees(), this.loadGroups()]);
+  }
+
+
+  async loadGroups(): Promise<void> {
+    try {
+      const response = await firstValueFrom(this.api.getEmployeeGroups());
+      this.groups.set(response.groups);
+    } catch (error) {
+      this.showError(this.getApiError(error));
+    }
   }
 
 
@@ -140,9 +179,11 @@ export class Empleados implements OnInit {
       apellido: employee.apellido,
       direccion: employee.direccion ?? '',
       matricula: employee.matricula ?? '',
+      gremio: employee.gremio ?? '',
       telefono: employee.telefono ?? '',
       fecha_nacimiento: employee.fecha_nacimiento,
-      fecha_ingreso: employee.fecha_ingreso ?? ''
+      fecha_ingreso: employee.fecha_ingreso ?? '',
+      group_id: employee.group?.id ?? null
     };
 
     this.dialogVisible.set(true);
@@ -185,9 +226,11 @@ export class Empleados implements OnInit {
           apellido: this.form.apellido.trim(),
           direccion: this.form.direccion.trim() || null,
           matricula: this.form.matricula.trim() || null,
+          gremio: this.form.gremio.trim() || null,
           telefono: this.form.telefono.trim() || null,
           fecha_nacimiento: this.form.fecha_nacimiento,
-          fecha_ingreso: this.form.fecha_ingreso || null
+          fecha_ingreso: this.form.fecha_ingreso || null,
+          group_id: this.form.group_id
         };
 
         await firstValueFrom(
@@ -206,9 +249,11 @@ export class Empleados implements OnInit {
           apellido: this.form.apellido.trim(),
           direccion: this.form.direccion.trim() || null,
           matricula: this.form.matricula.trim() || null,
+          gremio: this.form.gremio.trim() || null,
           telefono: this.form.telefono.trim() || null,
           fecha_nacimiento: this.form.fecha_nacimiento,
-          fecha_ingreso: this.form.fecha_ingreso || null
+          fecha_ingreso: this.form.fecha_ingreso || null,
+          group_id: this.form.group_id
         };
 
         await firstValueFrom(
@@ -267,6 +312,117 @@ export class Empleados implements OnInit {
   }
 
 
+  async toggleEmployeeStatus(employee: Employee): Promise<void> {
+    const reactivating = !!employee.fecha_baja;
+    const message = reactivating
+      ? '¿Confirmás que querés volver a dar de alta a este empleado?'
+      : '¿Confirmás la baja? El empleado dejará de aparecer en sueldos desde el mes actual.';
+
+    if (!window.confirm(message)) {
+      return;
+    }
+
+    this.saving.set(true);
+
+    try {
+      const today = new Date();
+      const fechaBaja = reactivating
+        ? null
+        : `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+      await firstValueFrom(
+        this.api.updateEmployee(employee.id, { fecha_baja: fechaBaja })
+      );
+
+      await this.loadEmployees();
+      this.showSuccess(
+        reactivating
+          ? 'Empleado dado de alta nuevamente.'
+          : 'Empleado dado de baja correctamente.'
+      );
+
+    } catch (error) {
+      this.showError(this.getApiError(error));
+    } finally {
+      this.saving.set(false);
+    }
+  }
+
+
+  openGroupCreate(): void {
+    this.editingGroupId.set(null);
+    this.groupName = '';
+    this.groupDialogVisible.set(true);
+  }
+
+
+  openGroupEdit(group: EmployeeGroup): void {
+    this.editingGroupId.set(group.id);
+    this.groupName = group.nombre;
+    this.groupDialogVisible.set(true);
+  }
+
+
+  async saveGroup(): Promise<void> {
+    const nombre = this.groupName.trim();
+
+    if (!nombre) {
+      this.showError('El nombre del grupo es obligatorio.');
+      return;
+    }
+
+    this.saving.set(true);
+
+    try {
+      const groupId = this.editingGroupId();
+
+      if (groupId === null) {
+        await firstValueFrom(this.api.createEmployeeGroup({ nombre }));
+        this.showSuccess('Grupo creado correctamente.');
+      } else {
+        await firstValueFrom(this.api.updateEmployeeGroup(groupId, { nombre }));
+        this.showSuccess('Grupo actualizado correctamente.');
+      }
+
+      this.groupDialogVisible.set(false);
+      await Promise.all([this.loadGroups(), this.loadEmployees()]);
+    } catch (error) {
+      this.showError(this.getApiError(error));
+    } finally {
+      this.saving.set(false);
+    }
+  }
+
+
+  askDeleteGroup(group: EmployeeGroup): void {
+    this.groupToDelete.set(group);
+    this.groupConfirmVisible.set(true);
+  }
+
+
+  async deleteGroup(): Promise<void> {
+    const group = this.groupToDelete();
+
+    if (!group) {
+      return;
+    }
+
+    this.saving.set(true);
+
+    try {
+      await firstValueFrom(this.api.deleteEmployeeGroup(group.id));
+      this.groupConfirmVisible.set(false);
+      this.groupToDelete.set(null);
+      await Promise.all([this.loadGroups(), this.loadEmployees()]);
+      this.showSuccess('Grupo eliminado correctamente.');
+    } catch (error) {
+      this.showError(this.getApiError(error));
+    } finally {
+      this.saving.set(false);
+    }
+  }
+
+
   getFullName(employee: Employee): string {
     return `${employee.apellido}, ${employee.nombre}`;
   }
@@ -309,9 +465,11 @@ export class Empleados implements OnInit {
       apellido: '',
       direccion: '',
       matricula: '',
+      gremio: '',
       telefono: '',
       fecha_nacimiento: '',
-      fecha_ingreso: ''
+      fecha_ingreso: '',
+      group_id: null
     };
   }
 

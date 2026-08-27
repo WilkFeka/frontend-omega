@@ -1,0 +1,422 @@
+<p-toast
+  position="bottom-right"
+  [life]="3000"
+/>
+
+<section class="salaries-page">
+
+  <header class="page-header">
+
+    <div>
+
+      <span class="page-eyebrow">
+        Personal
+      </span>
+
+      <h1>
+        Sueldos
+      </h1>
+
+      <p>
+        Liquidaciones correspondientes a
+        <strong>{{ periodLabel() }}</strong>.
+      </p>
+
+    </div>
+
+
+    <div class="period-selector">
+
+      <label for="periodo">
+        Período
+      </label>
+
+      <div class="period-navigation">
+        <button type="button" aria-label="Mes anterior" (click)="movePeriod(-1)">
+          <i class="pi pi-chevron-left"></i>
+        </button>
+
+        <p-datepicker
+          inputId="periodo"
+          view="month"
+          dateFormat="mm/yy"
+          [showIcon]="true"
+          [readonlyInput]="true"
+          [ngModel]="periodDate()"
+          (ngModelChange)="changePeriodDate($event)"
+        />
+
+        <button type="button" aria-label="Mes siguiente" (click)="movePeriod(1)">
+          <i class="pi pi-chevron-right"></i>
+        </button>
+      </div>
+
+    </div>
+
+  </header>
+
+
+  <!-- ====================== STATS ====================== -->
+
+  <section class="stats-grid">
+
+    <article class="stat-card">
+
+      <div class="stat-icon">
+        <i class="pi pi-users"></i>
+      </div>
+
+      <div>
+        <span>Empleados</span>
+        <strong>{{ filteredRows().length }}</strong>
+      </div>
+
+    </article>
+
+
+    <article class="stat-card">
+
+      <div class="stat-icon liquidated">
+        <i class="pi pi-file-check"></i>
+      </div>
+
+      <div>
+        <span>Liquidados</span>
+        <strong>{{ liquidatedCount() }}</strong>
+      </div>
+
+    </article>
+
+
+    <article class="stat-card">
+
+      <div class="stat-icon transfer">
+        <i class="pi pi-building-columns"></i>
+      </div>
+
+      <div>
+        <span>Transferencias</span>
+        <strong>{{ formatCurrency(totalTransfers()) }}</strong>
+      </div>
+
+    </article>
+
+
+    <article class="stat-card">
+
+      <div class="stat-icon cash">
+        <i class="pi pi-money-bill"></i>
+      </div>
+
+      <div>
+        <span>Efectivo</span>
+        <strong>{{ formatCurrency(totalCash()) }}</strong>
+      </div>
+
+    </article>
+
+
+    <article class="stat-card total">
+
+      <div class="stat-icon total-icon">
+        <i class="pi pi-wallet"></i>
+      </div>
+
+      <div>
+        <span>Total sueldos</span>
+        <strong>{{ formatCurrency(totalSalaries()) }}</strong>
+      </div>
+
+    </article>
+
+  </section>
+
+
+  <!-- ====================== TABLE ====================== -->
+
+  <section class="table-card">
+
+    <div class="table-toolbar">
+
+      <div>
+
+        <h2>
+          Liquidaciones
+        </h2>
+
+        <span>
+          {{ filteredRows().length }}
+          empleados
+        </span>
+
+      </div>
+
+
+      <div class="toolbar-filters">
+
+        <p-select
+          aria-label="Filtrar por gremio"
+          [appendTo]="'body'"
+          [options]="gremioOptions()"
+          optionLabel="label"
+          optionValue="value"
+          [ngModel]="gremioFilter()"
+          (ngModelChange)="gremioFilter.set($event)"
+        />
+
+        <p-select
+          aria-label="Filtrar por transferencia"
+          [appendTo]="'body'"
+          [options]="transferOptions"
+          optionLabel="label"
+          optionValue="value"
+          [ngModel]="transferFilter()"
+          (ngModelChange)="transferFilter.set($event)"
+        />
+
+        <p-select
+          aria-label="Filtrar por entrega de efectivo"
+          [appendTo]="'body'"
+          [options]="cashOptions"
+          optionLabel="label"
+          optionValue="value"
+          [ngModel]="cashFilter()"
+          (ngModelChange)="cashFilter.set($event)"
+        />
+
+        <p-select
+          aria-label="Filtrar por entrega de recibo"
+          [appendTo]="'body'"
+          [options]="receiptOptions"
+          optionLabel="label"
+          optionValue="value"
+          [ngModel]="receiptFilter()"
+          (ngModelChange)="receiptFilter.set($event)"
+        />
+
+        <p-select
+          aria-label="Filtrar por estado"
+          [appendTo]="'body'"
+          [options]="statusOptions"
+          optionLabel="label"
+          optionValue="value"
+          [ngModel]="statusFilter()"
+          (ngModelChange)="statusFilter.set($event)"
+        />
+
+        <div class="search-wrapper">
+
+        <i class="pi pi-search"></i>
+
+        <input
+          pInputText
+          type="search"
+          placeholder="Buscar empleado..."
+          [ngModel]="search()"
+          (ngModelChange)="search.set($event)"
+        />
+
+        </div>
+
+        <button
+          type="button"
+          class="reset-filters-button"
+          title="Restablecer filtros"
+          aria-label="Restablecer filtros"
+          (click)="resetFilters()"
+        >
+          <i class="pi pi-filter-slash"></i>
+        </button>
+
+      </div>
+
+    </div>
+
+
+    <p-table
+      [value]="filteredRows()"
+      [loading]="loading()"
+      [paginator]="filteredRows().length > 10"
+      [rows]="10"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      [scrollable]="true"
+      styleClass="salaries-table"
+    >
+
+      <ng-template #header>
+
+        <tr>
+          <th>Empleado</th>
+          <th>Gremio</th>
+          <th>
+            <span class="header-with-tooltip" pTooltip="Importe neto oficial que figura en el recibo de sueldo." tooltipPosition="top">
+              Recibo <i class="pi pi-info-circle"></i>
+            </span>
+          </th>
+          <th>
+            <span class="header-with-tooltip" pTooltip="Suma de todos los descuentos cargados en la liquidación." tooltipPosition="top">
+              Descuentos <i class="pi pi-info-circle"></i>
+            </span>
+          </th>
+          <th>
+            <span class="header-with-tooltip" pTooltip="Transferencia real = recibo de sueldo menos descuentos." tooltipPosition="top">
+              Transferencia <i class="pi pi-info-circle"></i>
+            </span>
+          </th>
+          <th>
+            <span class="header-with-tooltip" pTooltip="Importe del ajuste adicional entregado en efectivo." tooltipPosition="top">
+              Efectivo <i class="pi pi-info-circle"></i>
+            </span>
+          </th>
+          <th>
+            <span class="header-with-tooltip" pTooltip="Sueldo total = transferencia real + efectivo + adicionales." tooltipPosition="top">
+              Sueldo total <i class="pi pi-info-circle"></i>
+            </span>
+          </th>
+          <th></th>
+        </tr>
+
+      </ng-template>
+
+
+      <ng-template
+        #body
+        let-row
+      >
+
+        <tr
+          class="salary-row"
+          tabindex="0"
+          (click)="openEmployee(row.employee.id)"
+          (keydown.enter)="openEmployee(row.employee.id)"
+        >
+
+          <td>
+
+            <div class="employee-cell">
+
+              <div class="avatar">
+                {{
+                  row.employee.nombre
+                    .charAt(0)
+                    .toUpperCase()
+                }}
+              </div>
+
+              <div class="employee-info">
+
+                <strong>
+                  {{ getFullName(row) }}
+                </strong>
+
+                @if (!row.salary) {
+                  <small>Sin liquidar</small>
+                }
+
+                @if (row.salary?.anulado) {
+                  <small class="cancelled">
+                    Liquidación anulada
+                  </small>
+                }
+
+              </div>
+
+            </div>
+
+          </td>
+
+
+          <td>
+            {{ row.employee.gremio || '-' }}
+          </td>
+
+
+          <td>
+            @if (row.salary) {
+              {{ formatCurrency(row.salary.importe_recibo) }}
+            } @else {
+              -
+            }
+          </td>
+
+
+          <td class="discount-value">
+            @if (row.salary) {
+              - {{ formatCurrency(row.salary.descuentos_total) }}
+            } @else {
+              -
+            }
+          </td>
+
+
+          <td class="transfer-value">
+            @if (row.salary) {
+              {{ formatCurrency(row.salary.transferencia_real) }}
+            } @else {
+              -
+            }
+          </td>
+
+
+          <td class="cash-value">
+            @if (row.salary) {
+              {{ formatCurrency(row.salary.ajuste_efectivo) }}
+            } @else {
+              -
+            }
+          </td>
+
+
+          <td class="total-value">
+            @if (row.salary) {
+              {{ formatCurrency(row.salary.sueldo_total) }}
+            } @else {
+              -
+            }
+          </td>
+
+
+          <td class="open-column">
+            <i class="pi pi-chevron-right"></i>
+          </td>
+
+        </tr>
+
+      </ng-template>
+
+
+      <ng-template #emptymessage>
+
+        <tr>
+
+          <td
+            colspan="8"
+            class="empty-cell"
+          >
+
+            <div class="empty-state">
+
+              <i class="pi pi-wallet"></i>
+
+              <strong>
+                No hay empleados
+              </strong>
+
+              <span>
+                No encontramos resultados
+                para este período.
+              </span>
+
+            </div>
+
+          </td>
+
+        </tr>
+
+      </ng-template>
+
+    </p-table>
+
+  </section>
+
+</section>

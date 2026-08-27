@@ -1,0 +1,549 @@
+:host {
+  display: block;
+}
+
+.salaries-page {
+  min-height: calc(100vh - 72px);
+  padding: 32px 32px 48px 96px;
+  background: #f8fafc;
+}
+
+
+/* ====================== HEADER ====================== */
+
+.page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  max-width: 1500px;
+  gap: 24px;
+  margin: 0 auto 28px;
+
+  h1 {
+    margin: 4px 0 6px;
+    color: #18181b;
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: -0.035em;
+  }
+
+  p {
+    margin: 0;
+    color: #71717a;
+    font-size: 0.925rem;
+  }
+}
+
+.page-eyebrow {
+  color: #9810d5;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.period-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  label {
+    color: #52525b;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  input {
+    width: 180px;
+    height: 42px;
+  }
+}
+
+.period-navigation {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  p-datepicker {
+    display: inline-flex;
+    margin: 0 4px;
+  }
+
+  > button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    color: #7e22ce;
+    background: #ffffff;
+    border: 1px solid #d8b4fe;
+    border-radius: 9px;
+
+    &:hover {
+      background: #faf5ff;
+      border-color: #a855f7;
+    }
+  }
+}
+
+
+/* ====================== STATS ====================== */
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  max-width: 1500px;
+  gap: 14px;
+  margin: 0 auto 20px;
+}
+
+.stat-card {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 13px;
+  padding: 17px;
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+  border-radius: 13px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.025);
+
+  > div:last-child {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  span {
+    color: #71717a;
+    font-size: 0.76rem;
+  }
+
+  strong {
+    overflow: hidden;
+    color: #18181b;
+    font-size: 1.1rem;
+    font-weight: 700;
+    text-overflow: ellipsis;
+  }
+
+  &.total {
+    background: linear-gradient(135deg, #ffffff, #faf5ff);
+    border-color: #e9d5ff;
+  }
+}
+
+.stat-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  color: #7e22ce;
+  background: #f5e6fb;
+  border-radius: 11px;
+
+  &.liquidated {
+    color: #2563eb;
+    background: #dbeafe;
+  }
+
+  &.transfer {
+    color: #0369a1;
+    background: #e0f2fe;
+  }
+
+  &.cash {
+    color: #15803d;
+    background: #dcfce7;
+  }
+
+  &.total-icon {
+    color: #7e22ce;
+    background: #f3e8ff;
+  }
+}
+
+
+/* ====================== TABLE ====================== */
+
+.table-card {
+  max-width: 1500px;
+  min-height: 600px;
+  margin: 0 auto;
+  overflow: visible;
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+  border-radius: 14px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.025);
+}
+
+.table-toolbar {
+  border-radius: 14px 14px 0 0;
+}
+
+.table-toolbar {
+  display: flex;
+  align-items: stretch;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px;
+  border-bottom: 1px solid #e4e4e7;
+
+  h2 {
+    margin: 0 0 3px;
+    color: #18181b;
+    font-size: 1rem;
+    font-weight: 650;
+  }
+
+  > div:first-child > span {
+    color: #71717a;
+    font-size: 0.78rem;
+  }
+}
+
+.search-wrapper {
+  position: relative;
+  width: min(320px, 100%);
+
+  i {
+    position: absolute;
+    top: 50%;
+    left: 13px;
+    z-index: 2;
+    color: #a1a1aa;
+    transform: translateY(-50%);
+  }
+
+  input {
+    width: 100%;
+    height: 42px;
+    padding-left: 38px;
+  }
+}
+
+.toolbar-filters {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 10px;
+
+  p-select {
+    min-width: 170px;
+  }
+}
+
+:host ::ng-deep {
+  .toolbar-filters .p-select {
+    min-width: 190px;
+    height: 42px;
+  }
+
+  .period-selector .p-datepicker {
+    width: 180px;
+  }
+
+  .period-selector .p-datepicker-input {
+    width: 1%;
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+}
+
+.reset-filters-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  padding: 0;
+  color: #7e22ce;
+  background: #faf5ff;
+  border: 1px solid #d8b4fe;
+  border-radius: 9px;
+  font-size: 0.9rem;
+  font-weight: 600;
+
+  &:hover {
+    background: #f3e8ff;
+    border-color: #a855f7;
+  }
+}
+
+:host ::ng-deep {
+
+  .salaries-table .p-datatable-table {
+    width: 100%;
+    min-width: 1150px;
+    table-layout: fixed;
+  }
+
+  .salaries-table .p-datatable-thead > tr > th:nth-child(1),
+  .salaries-table .p-datatable-tbody > tr > td:nth-child(1) {
+    width: 20%;
+  }
+
+  .salaries-table .p-datatable-thead > tr > th:nth-child(2),
+  .salaries-table .p-datatable-tbody > tr > td:nth-child(2) {
+    width: 10%;
+  }
+
+  .salaries-table .p-datatable-thead > tr > th:nth-child(3),
+  .salaries-table .p-datatable-tbody > tr > td:nth-child(3) {
+    width: 11%;
+  }
+
+  .salaries-table .p-datatable-thead > tr > th:nth-child(4),
+  .salaries-table .p-datatable-tbody > tr > td:nth-child(4) {
+    width: 15%;
+  }
+
+  .salaries-table .p-datatable-thead > tr > th:nth-child(5),
+  .salaries-table .p-datatable-tbody > tr > td:nth-child(5) {
+    width: 17%;
+  }
+
+  .salaries-table .p-datatable-thead > tr > th:nth-child(6),
+  .salaries-table .p-datatable-tbody > tr > td:nth-child(6) {
+    width: 12%;
+  }
+
+  .salaries-table .p-datatable-thead > tr > th:nth-child(7),
+  .salaries-table .p-datatable-tbody > tr > td:nth-child(7) {
+    width: 12%;
+  }
+
+  .salaries-table .p-datatable-thead > tr > th:nth-child(8),
+  .salaries-table .p-datatable-tbody > tr > td:nth-child(8) {
+    width: 3%;
+  }
+
+  .salaries-table .p-datatable-wrapper {
+    border-radius: 0 0 14px 14px;
+  }
+
+  .salaries-table .p-datatable-thead > tr > th {
+    padding: 13px 16px;
+    color: #71717a;
+    background: #fafafa;
+    border-color: #e4e4e7;
+    font-size: 0.72rem;
+    font-weight: 650;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+  }
+
+  .salaries-table .p-datatable-tbody > tr > td {
+    padding: 14px 16px;
+    color: #3f3f46;
+    border-color: #f0f0f1;
+    font-size: 0.83rem;
+  }
+
+  .salaries-table .p-datatable-tbody > tr > td.empty-cell {
+    height: 330px;
+    padding: 0;
+    border-bottom: 0;
+  }
+
+  .salaries-table .p-paginator {
+    border: 0;
+    border-top: 1px solid #e4e4e7;
+  }
+}
+
+.salary-row {
+  cursor: pointer;
+  transition: background 150ms ease;
+
+  &:hover {
+    background: #faf5ff !important;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #c026d3;
+    outline-offset: -2px;
+  }
+}
+
+.header-with-tooltip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: help;
+
+  i {
+    color: #a855f7;
+    font-size: 0.72rem;
+  }
+}
+
+
+/* ====================== EMPLOYEE ====================== */
+
+.employee-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.employee-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  strong {
+    color: #27272a;
+    font-size: 0.84rem;
+  }
+
+  small {
+    color: #a1a1aa;
+    font-size: 0.69rem;
+
+    &.cancelled {
+      color: #dc2626;
+    }
+  }
+}
+
+.avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  color: #7e22ce;
+  background: #f5e6fb;
+  border-radius: 50%;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.discount-value {
+  color: #b91c1c !important;
+}
+
+.transfer-value {
+  color: #0369a1 !important;
+  font-weight: 600;
+}
+
+.cash-value {
+  color: #15803d !important;
+  font-weight: 600;
+}
+
+.total-value {
+  color: #18181b !important;
+  font-weight: 700;
+}
+
+.open-column {
+  width: 45px;
+  color: #a1a1aa !important;
+  text-align: right;
+}
+
+
+/* ====================== EMPTY ====================== */
+
+.empty-state {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 7px;
+  width: 100%;
+  min-height: 330px;
+  padding: 40px 20px;
+  color: #71717a;
+  text-align: center;
+
+  i {
+    margin-bottom: 5px;
+    color: #d4d4d8;
+    font-size: 2rem;
+  }
+
+  strong {
+    color: #3f3f46;
+  }
+
+  span {
+    font-size: 0.82rem;
+  }
+}
+
+
+/* ====================== RESPONSIVE ====================== */
+
+@media (max-width: 1200px) {
+
+  .stats-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+
+@media (max-width: 768px) {
+
+  .salaries-page {
+    min-height: calc(100vh - 64px);
+    padding: 22px 16px 36px 80px;
+  }
+
+  .page-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .period-selector input {
+    width: 100%;
+  }
+
+  :host ::ng-deep .period-selector .p-datepicker {
+    width: 100%;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .table-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .search-wrapper {
+    width: 100%;
+  }
+
+  .toolbar-filters {
+    align-items: stretch;
+    flex-direction: column;
+
+    p-select {
+      width: 100%;
+    }
+  }
+
+  :host ::ng-deep .toolbar-filters .p-select {
+    width: 100%;
+  }
+
+}
+
+
+@media (max-width: 520px) {
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+}

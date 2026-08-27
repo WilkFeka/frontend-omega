@@ -20,17 +20,30 @@
     </div>
 
 
-    <button
-      pButton
-      type="button"
-      class="primary-button"
-      (click)="openCreate()"
-    >
-      <i class="pi pi-plus"></i>
-      Nuevo empleado
-    </button>
+    @if (activeSection() === 'employees') {
+      <button pButton type="button" class="primary-button" (click)="openCreate()">
+        <i class="pi pi-plus"></i>
+        Nuevo empleado
+      </button>
+    } @else {
+      <button pButton type="button" class="primary-button" (click)="openGroupCreate()">
+        <i class="pi pi-plus"></i>
+        Nuevo grupo
+      </button>
+    }
 
   </header>
+
+  <nav class="section-tabs" aria-label="Secciones de empleados">
+    <button type="button" [class.active]="activeSection() === 'employees'" (click)="activeSection.set('employees')">
+      <i class="pi pi-users"></i> Empleados
+    </button>
+    <button type="button" [class.active]="activeSection() === 'groups'" (click)="activeSection.set('groups')">
+      <i class="pi pi-objects-column"></i> Grupos
+    </button>
+  </nav>
+
+  @if (activeSection() === 'employees') {
 
 
   <!-- ====================== STATS ====================== -->
@@ -146,6 +159,7 @@
 
         <tr>
           <th>Empleado</th>
+          <th>Grupo</th>
           <th>Matrícula</th>
           <th>Teléfono</th>
           <th>Dirección</th>
@@ -179,13 +193,18 @@
                 }}
               </div>
 
-              <span>
-                {{ getFullName(employee) }}
+              <span class="employee-name-status">
+                <strong>{{ getFullName(employee) }}</strong>
+                @if (employee.fecha_baja) {
+                  <small>Dado de baja el {{ formatDate(employee.fecha_baja) }}</small>
+                }
               </span>
 
             </div>
 
           </td>
+
+          <td>{{ employee.group?.nombre || '-' }}</td>
 
 
           <td>
@@ -230,6 +249,19 @@
               <button
                 type="button"
                 class="icon-button"
+                [class.success]="employee.fecha_baja"
+                [class.warning]="!employee.fecha_baja"
+                [attr.aria-label]="employee.fecha_baja ? 'Dar de alta' : 'Dar de baja'"
+                [title]="employee.fecha_baja ? 'Dar de alta' : 'Dar de baja'"
+                (click)="toggleEmployeeStatus(employee)"
+              >
+                <i [class]="employee.fecha_baja ? 'pi pi-user-plus' : 'pi pi-user-minus'"></i>
+              </button>
+
+
+              <button
+                type="button"
+                class="icon-button"
                 aria-label="Editar empleado"
                 title="Editar"
                 (click)="openEdit(employee)"
@@ -261,7 +293,7 @@
 
         <tr>
 
-          <td colspan="7">
+          <td colspan="8">
 
             <div class="empty-state">
 
@@ -287,6 +319,61 @@
     </p-table>
 
   </section>
+
+  } @else {
+
+    <section class="table-card groups-card">
+      <div class="table-toolbar">
+        <div>
+          <h2>Grupos</h2>
+          <span>{{ filteredGroups().length }} resultados</span>
+        </div>
+        <div class="search-wrapper">
+          <i class="pi pi-search" aria-hidden="true"></i>
+          <input pInputText type="search" placeholder="Buscar grupo..." aria-label="Buscar grupo"
+            [ngModel]="groupSearch()" (ngModelChange)="groupSearch.set($event)" />
+        </div>
+      </div>
+
+      <p-table [value]="filteredGroups()" [loading]="loading()" styleClass="groups-table">
+        <ng-template #header>
+          <tr>
+            <th>Nombre</th>
+            <th>Empleados asignados</th>
+            <th class="actions-column">Acciones</th>
+          </tr>
+        </ng-template>
+        <ng-template #body let-group>
+          <tr>
+            <td><strong>{{ group.nombre }}</strong></td>
+            <td>{{ group.employee_count }}</td>
+            <td>
+              <div class="actions">
+                <button type="button" class="icon-button" title="Editar" (click)="openGroupEdit(group)">
+                  <i class="pi pi-pencil"></i>
+                </button>
+                <button type="button" class="icon-button danger" title="Eliminar" (click)="askDeleteGroup(group)">
+                  <i class="pi pi-trash"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template #emptymessage>
+          <tr>
+            <td colspan="3">
+              <div class="empty-state">
+                <i class="pi pi-objects-column"></i>
+                <strong>No hay grupos</strong>
+                <span>No encontramos grupos con la búsqueda actual.</span>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </section>
+
+  }
 
 </section>
 
@@ -389,6 +476,39 @@
       </div>
 
 
+      <div class="field">
+
+        <label for="gremio">
+          Gremio
+        </label>
+
+        <input
+          pInputText
+          id="gremio"
+          name="gremio"
+          [(ngModel)]="form.gremio"
+          placeholder="Ej: UOCRA"
+        />
+
+      </div>
+
+
+      <div class="field">
+        <label for="employee_group">Grupo</label>
+        <p-select
+          inputId="employee_group"
+          name="employee_group"
+          [options]="groupOptions()"
+          optionLabel="label"
+          optionValue="value"
+          [ngModel]="form.group_id"
+          (ngModelChange)="form.group_id = $event"
+          [appendTo]="'body'"
+          placeholder="Seleccionar grupo"
+        />
+      </div>
+
+
       <div class="field full-width">
 
         <label for="direccion">
@@ -484,6 +604,67 @@
 </p-dialog>
 
 
+<!-- ====================== CREAR / EDITAR GRUPO ====================== -->
+
+<p-dialog
+  [visible]="groupDialogVisible()"
+  (visibleChange)="groupDialogVisible.set($event)"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [header]="editingGroupId() === null ? 'Nuevo grupo' : 'Editar grupo'"
+  [style]="{ width: 'min(460px, calc(100vw - 32px))' }"
+>
+  <form class="employee-form" (ngSubmit)="saveGroup()">
+    <div class="field">
+      <label for="group_name">Nombre <span>*</span></label>
+      <input pInputText id="group_name" name="group_name" [(ngModel)]="groupName" required />
+    </div>
+
+    <div class="dialog-actions">
+      <button type="button" class="secondary-button" [disabled]="saving()" (click)="groupDialogVisible.set(false)">
+        Cancelar
+      </button>
+      <button pButton type="submit" class="primary-button" [disabled]="saving()">
+        @if (saving()) { <i class="pi pi-spinner pi-spin"></i> } @else { <i class="pi pi-check"></i> }
+        Guardar
+      </button>
+    </div>
+  </form>
+</p-dialog>
+
+
+<!-- ====================== ELIMINAR GRUPO ====================== -->
+
+<p-dialog
+  [visible]="groupConfirmVisible()"
+  (visibleChange)="groupConfirmVisible.set($event)"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  header="Eliminar grupo"
+  [style]="{ width: 'min(460px, calc(100vw - 32px))' }"
+>
+  <div class="confirm-content">
+    <div class="confirm-icon"><i class="pi pi-exclamation-triangle"></i></div>
+    <div>
+      <strong>¿Eliminar el grupo {{ groupToDelete()?.nombre }}?</strong>
+      <p>Los empleados asignados quedarán sin grupo, pero no se eliminarán.</p>
+    </div>
+  </div>
+
+  <div class="dialog-actions">
+    <button type="button" class="secondary-button" [disabled]="saving()" (click)="groupConfirmVisible.set(false)">
+      Cancelar
+    </button>
+    <button type="button" class="danger-button" [disabled]="saving()" (click)="deleteGroup()">
+      @if (saving()) { <i class="pi pi-spinner pi-spin"></i> } @else { <i class="pi pi-trash"></i> }
+      Eliminar
+    </button>
+  </div>
+</p-dialog>
+
+
 <!-- ====================== ELIMINAR ====================== -->
 
 <p-dialog
@@ -519,7 +700,8 @@
       </p>
 
       <p>
-        Esta acción no se puede deshacer.
+        También se eliminarán definitivamente todas sus liquidaciones,
+        descuentos y adicionales. Esta acción no se puede deshacer.
       </p>
 
     </div>

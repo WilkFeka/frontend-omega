@@ -202,6 +202,37 @@ button.p-button.primary-button,
    TABLE CARD
    ========================================= */
 
+.section-tabs {
+  display: flex;
+  max-width: 1500px;
+  gap: 6px;
+  margin: 0 auto 18px;
+  padding: 5px;
+  background: #f4f4f5;
+  border-radius: 11px;
+
+  button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 38px;
+    gap: 7px;
+    padding: 0 16px;
+    color: #71717a;
+    background: transparent;
+    border: 0;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+
+    &.active {
+      color: #7e22ce;
+      background: #ffffff;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    }
+  }
+}
+
 .table-card {
   max-width: 1500px;
   margin: 0 auto;
@@ -297,6 +328,16 @@ button.p-button.primary-button,
     border-top: 1px solid #e4e4e7;
     border-radius: 0;
   }
+
+  .groups-table .p-datatable-thead > tr > th,
+  .groups-table .p-datatable-tbody > tr > td {
+    padding: 14px 16px;
+  }
+
+  .groups-table .p-datatable-thead > tr > th:last-child,
+  .groups-table .p-datatable-tbody > tr > td:last-child {
+    width: 130px;
+  }
 }
 
 .actions-column {
@@ -314,6 +355,18 @@ button.p-button.primary-button,
   align-items: center;
   gap: 10px;
   font-weight: 600;
+}
+
+.employee-name-status {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+
+  small {
+    color: #b91c1c;
+    font-size: 0.68rem;
+    font-weight: 600;
+  }
 }
 
 .avatar {
@@ -380,6 +433,24 @@ button.p-button.primary-button,
   &.danger:hover {
     color: #dc2626;
     background: #fef2f2;
+  }
+
+  &.warning {
+    color: #b45309;
+  }
+
+  &.warning:hover {
+    color: #92400e;
+    background: #fffbeb;
+  }
+
+  &.success {
+    color: #15803d;
+  }
+
+  &.success:hover {
+    color: #166534;
+    background: #f0fdf4;
   }
 }
 
@@ -463,6 +534,10 @@ button.p-button.primary-button,
 
   .employee-dialog .p-dialog-content {
     overflow: visible;
+  }
+
+  .employee-dialog .p-select {
+    width: 100%;
   }
 }
 
