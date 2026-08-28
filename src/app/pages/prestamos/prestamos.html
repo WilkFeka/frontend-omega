@@ -11,11 +11,11 @@
   </header>
 
   <section class="stats-grid">
-    <article class="stat-card"><span class="stat-icon purple"><i class="pi pi-wallet"></i></span><div><small>Total prestado</small><strong>{{ formatCurrency(kpis().total_lent) }}</strong></div></article>
-    <article class="stat-card featured"><span class="stat-icon violet"><i class="pi pi-chart-line"></i></span><div><small>Saldo pendiente</small><strong>{{ formatCurrency(kpis().outstanding_balance) }}</strong></div></article>
-    <article class="stat-card"><span class="stat-icon green"><i class="pi pi-check-circle"></i></span><div><small>Cobrado este mes</small><strong>{{ formatCurrency(kpis().collected_this_month) }}</strong></div></article>
-    <article class="stat-card"><span class="stat-icon orange"><i class="pi pi-clock"></i></span><div><small>Cuotas vencidas</small><strong>{{ kpis().overdue_installments }}</strong></div></article>
-    <article class="stat-card"><span class="stat-icon blue"><i class="pi pi-users"></i></span><div><small>Préstamos activos</small><strong>{{ kpis().active_loans }}</strong></div></article>
+    <article class="stat-card"><span class="stat-icon purple"><i class="pi pi-wallet"></i></span><div><small>Total prestado</small><strong>{{ formatCurrency(filteredKpis().total_lent) }}</strong></div></article>
+    <article class="stat-card featured"><span class="stat-icon violet"><i class="pi pi-chart-line"></i></span><div><small>Saldo pendiente</small><strong>{{ formatCurrency(filteredKpis().outstanding_balance) }}</strong></div></article>
+    <article class="stat-card"><span class="stat-icon green"><i class="pi pi-check-circle"></i></span><div><small>Cobrado este mes</small><strong>{{ formatCurrency(filteredKpis().collected_this_month) }}</strong></div></article>
+    <article class="stat-card"><span class="stat-icon orange"><i class="pi pi-clock"></i></span><div><small>Cuotas vencidas</small><strong>{{ filteredKpis().overdue_installments }}</strong></div></article>
+    <article class="stat-card"><span class="stat-icon blue"><i class="pi pi-users"></i></span><div><small>Préstamos activos</small><strong>{{ filteredKpis().active_loans }}</strong></div></article>
   </section>
 
   <section class="table-card">
@@ -66,7 +66,7 @@
       <div class="field"><label>Nombre completo *</label><input pInputText [(ngModel)]="form.external_name" name="external_name" /></div>
       <div class="field"><label>Documento</label><input pInputText [(ngModel)]="form.external_document" name="external_document" /></div>
     }
-    <div class="field"><label>Monto total *</label><p-inputnumber [(ngModel)]="form.total_amount" name="total_amount" mode="currency" currency="ARS" locale="es-AR" [min]="0" /></div>
+    <div class="field"><label>Monto total *</label><div class="money-input"><span>$</span><input pInputText name="total_amount" type="text" inputmode="decimal" [ngModel]="formatMoneyInput(form.total_amount)" (ngModelChange)="updateLoanAmount($event)" /></div></div>
     <div class="field"><label>Cantidad de cuotas *</label><p-inputnumber [(ngModel)]="form.installment_count" name="installment_count" [min]="1" [max]="240" [useGrouping]="false" /></div>
     <div class="field"><label>Fecha de entrega *</label><p-datepicker [(ngModel)]="form.delivery_date" name="delivery_date" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" /></div>
     <div class="field"><label>Primera cuota *</label><p-datepicker [(ngModel)]="form.first_installment_period" name="first_installment_period" view="month" dateFormat="mm/yy" [showIcon]="true" appendTo="body" /></div>
@@ -96,9 +96,9 @@
 <p-dialog [visible]="installmentVisible()" (visibleChange)="installmentVisible.set($event)" [header]="creatingInstallment() ? 'Agregar cuota' : 'Registrar cuota'" [modal]="true" [draggable]="false" [resizable]="false" [focusOnShow]="false" [style]="{ width: 'min(560px, calc(100vw - 32px))' }">
   <form class="installment-form" (ngSubmit)="saveInstallment()">
     <div class="field"><label>Período *</label><p-datepicker [(ngModel)]="installmentForm.period" name="installment_period" view="month" dateFormat="mm/yy" [showIcon]="true" appendTo="body" /></div>
-    <div class="field"><label>Importe previsto</label><p-inputnumber [(ngModel)]="installmentForm.expected_amount" name="expected_amount" mode="currency" currency="ARS" locale="es-AR" [min]="0" /></div>
+    <div class="field"><label>Importe previsto</label><div class="money-input"><span>$</span><input pInputText name="expected_amount" type="text" inputmode="decimal" [ngModel]="formatMoneyInput(installmentForm.expected_amount)" (ngModelChange)="updateInstallmentAmount('expected_amount', $event)" /></div></div>
     @if (!creatingInstallment()) {
-      <div class="field"><label>Importe pagado</label><p-inputnumber [(ngModel)]="installmentForm.paid_amount" name="paid_amount" mode="currency" currency="ARS" locale="es-AR" [min]="0" /></div>
+      <div class="field"><label>Importe pagado</label><div class="money-input"><span>$</span><input pInputText name="paid_amount" type="text" inputmode="decimal" [ngModel]="formatMoneyInput(installmentForm.paid_amount)" (ngModelChange)="updateInstallmentAmount('paid_amount', $event)" /></div></div>
       <div class="field"><label>Estado</label><p-select [options]="installmentStatusOptions" optionLabel="label" optionValue="value" [ngModel]="installmentForm.status" (ngModelChange)="onInstallmentStatusChange($event)" name="status" appendTo="body" /></div>
       <div class="field"><label>Fecha de pago</label><p-datepicker [(ngModel)]="installmentForm.payment_date" name="payment_date" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" /></div>
       <div class="field full"><label>Medio de cobro</label><p-select [options]="paymentOptions" optionLabel="label" optionValue="value" [(ngModel)]="installmentForm.payment_method" name="payment_method" placeholder="Seleccionar" appendTo="body" /></div>

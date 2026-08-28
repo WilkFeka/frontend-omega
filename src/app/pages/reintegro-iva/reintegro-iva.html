@@ -1,0 +1,220 @@
+<p-toast position="bottom-right" />
+<section class="vat-page">
+  <header class="page-header">
+    <div>
+      <span class="eyebrow">Finanzas</span>
+      <h1>Reintegro IVA</h1>
+      <p>
+        Beneficiarios e importes correspondientes a <strong>{{ formatPeriod() }}</strong
+        >.
+      </p>
+    </div>
+    <div class="header-actions">
+      <div class="period-selector">
+        <label for="vat_period">Período</label>
+        <div class="period-navigation">
+          <button type="button" aria-label="Mes anterior" (click)="movePeriod(-1)">
+            <i class="pi pi-chevron-left"></i></button
+          ><p-datepicker
+            inputId="vat_period"
+            view="month"
+            dateFormat="mm/yy"
+            [showIcon]="true"
+            [readonlyInput]="true"
+            [ngModel]="periodDate()"
+            (ngModelChange)="changePeriod($event)"
+          /><button type="button" aria-label="Mes siguiente" (click)="movePeriod(1)">
+            <i class="pi pi-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+      <button pButton type="button" (click)="openCreate()">
+        <i class="pi pi-plus"></i> Nuevo beneficiario
+      </button>
+    </div>
+  </header>
+
+  <section class="stats-grid">
+    <article class="stat-card">
+      <span class="stat-icon cash"><i class="pi pi-money-bill"></i></span>
+      <div>
+        <small>Total en efectivo</small><strong>{{ formatCurrency(cashTotal()) }}</strong>
+      </div>
+    </article>
+    <article class="stat-card">
+      <span class="stat-icon transfer"><i class="pi pi-building-columns"></i></span>
+      <div>
+        <small>Total en transferencia</small><strong>{{ formatCurrency(transferTotal()) }}</strong>
+      </div>
+    </article>
+    <article class="stat-card featured">
+      <span class="stat-icon purple"><i class="pi pi-wallet"></i></span>
+      <div>
+        <small>Total del período</small><strong>{{ formatCurrency(total()) }}</strong>
+      </div>
+    </article>
+  </section>
+
+  <section class="table-card">
+    <div class="table-toolbar">
+      <div>
+        <h2>Beneficiarios</h2>
+        <span>{{ filteredRows().length }} resultados</span>
+      </div>
+      <div class="filters">
+        <span class="search"
+          ><i class="pi pi-search"></i
+          ><input
+            pInputText
+            type="search"
+            placeholder="Buscar beneficiario..."
+            [ngModel]="search()"
+            (ngModelChange)="search.set($event)" /></span
+        ><button
+          pButton
+          type="button"
+          [text]="true"
+          [rounded]="true"
+          severity="secondary"
+          title="Restablecer filtros"
+          (click)="resetFilters()"
+        >
+          <i class="pi pi-filter-slash"></i>
+        </button>
+      </div>
+    </div>
+    <p-table
+      [value]="filteredRows()"
+      [loading]="loading()"
+      [paginator]="filteredRows().length > 10"
+      [rows]="10"
+      [scrollable]="true"
+    >
+      <ng-template #header
+        ><tr>
+          <th pSortableColumn="apellido">Beneficiario <p-sort-icon field="apellido" /></th>
+          <th>Período</th>
+          <th pSortableColumn="delivery_method">Entrega <p-sort-icon field="delivery_method" /></th>
+          <th pSortableColumn="detail_count">Detalles <p-sort-icon field="detail_count" /></th>
+          <th pSortableColumn="total">Total <p-sort-icon field="total" /></th>
+          <th></th></tr
+      ></ng-template>
+      <ng-template #body let-item
+        ><tr class="clickable" (click)="openDetail(item)">
+          <td>
+            <div class="person">
+              <span>{{ item.nombre.charAt(0) }}{{ item.apellido.charAt(0) }}</span
+              ><strong>{{ item.apellido }}, {{ item.nombre }}</strong>
+            </div>
+          </td>
+          <td>{{ formatPeriod() }}</td>
+          <td>{{ deliveryLabel(item.delivery_method) }}</td>
+          <td>{{ item.detail_count }}</td>
+          <td class="amount">{{ formatCurrency(item.total) }}</td>
+          <td>
+            <div class="actions">
+              <button
+                pButton
+                type="button"
+                [text]="true"
+                [rounded]="true"
+                title="Editar"
+                (click)="openEdit(item, $event)"
+              >
+                <i class="pi pi-pencil"></i></button
+              ><button
+                pButton
+                type="button"
+                [text]="true"
+                [rounded]="true"
+                severity="danger"
+                title="Eliminar"
+                (click)="askDelete(item, $event)"
+              >
+                <i class="pi pi-trash"></i></button
+              ><i class="pi pi-chevron-right"></i>
+            </div>
+          </td></tr
+      ></ng-template>
+      <ng-template #emptymessage
+        ><tr>
+          <td colspan="6">
+            <div class="empty">
+              <i class="pi pi-users"></i><strong>No hay beneficiarios</strong
+              ><span>Creá el primero para comenzar.</span>
+            </div>
+          </td>
+        </tr></ng-template
+      >
+    </p-table>
+  </section>
+</section>
+
+<p-dialog
+  [visible]="dialogVisible()"
+  (visibleChange)="dialogVisible.set($event)"
+  [header]="editing() ? 'Editar beneficiario' : 'Nuevo beneficiario'"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: 'min(500px, calc(100vw - 32px))' }"
+  ><form class="form" (ngSubmit)="save()">
+    <div class="field">
+      <label>Nombre *</label><input pInputText name="nombre" [(ngModel)]="form.nombre" />
+    </div>
+    <div class="field">
+      <label>Apellido *</label><input pInputText name="apellido" [(ngModel)]="form.apellido" />
+    </div>
+    <div class="field full">
+      <label>Medio de entrega *</label>
+      <p-select
+        name="delivery_method"
+        [options]="deliveryOptions"
+        optionLabel="label"
+        optionValue="value"
+        [(ngModel)]="form.delivery_method"
+        appendTo="body"
+      />
+    </div>
+    <div class="dialog-actions full">
+      <button
+        pButton
+        type="button"
+        severity="secondary"
+        [outlined]="true"
+        (click)="dialogVisible.set(false)"
+      >
+        Cancelar</button
+      ><button pButton type="submit" [loading]="saving()">Guardar</button>
+    </div>
+  </form></p-dialog
+>
+<p-dialog
+  [visible]="confirmVisible()"
+  (visibleChange)="confirmVisible.set($event)"
+  header="Eliminar beneficiario"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: 'min(460px, calc(100vw - 32px))' }"
+  ><div class="confirm">
+    <i class="pi pi-exclamation-triangle"></i>
+    <div>
+      <strong>¿Eliminar a {{ toDelete()?.apellido }}, {{ toDelete()?.nombre }}?</strong>
+      <p>También se eliminarán todos sus reintegros de todos los períodos.</p>
+    </div>
+  </div>
+  <div class="dialog-actions">
+    <button
+      pButton
+      type="button"
+      severity="secondary"
+      [outlined]="true"
+      (click)="confirmVisible.set(false)"
+    >
+      Cancelar</button
+    ><button pButton type="button" severity="danger" [loading]="saving()" (click)="delete()">
+      Eliminar
+    </button>
+  </div></p-dialog
+>

@@ -3,6 +3,53 @@ import { HttpClient } from '@angular/common/http';
 import * as i0 from "@angular/core";
 export class Api {
     http = inject(HttpClient);
+    // *====================== EXPENSES ======================*
+    getExpenses(period) {
+        return this.http.get('/api/gastos/', { params: { periodo: period }, withCredentials: true });
+    }
+    createExpense(data) {
+        return this.http.post('/api/gastos/', data, { withCredentials: true });
+    }
+    updateExpense(id, data) {
+        return this.http.patch(`/api/gastos/${id}/`, data, { withCredentials: true });
+    }
+    deleteExpense(id) {
+        return this.http.delete(`/api/gastos/${id}/`, { withCredentials: true });
+    }
+    getPreviousExpenses(period) {
+        return this.http.get('/api/gastos/copiar-anterior/', { params: { periodo: period }, withCredentials: true });
+    }
+    copyPreviousExpenses(period, expenseIds) {
+        return this.http.post('/api/gastos/copiar-anterior/', { period, expense_ids: expenseIds }, { withCredentials: true });
+    }
+    // *====================== VAT REFUNDS ======================*
+    getVatBeneficiaries(period) {
+        return this.http.get('/api/reintegros-iva/beneficiarios/', { params: { periodo: period }, withCredentials: true });
+    }
+    getVatBeneficiary(id) {
+        return this.http.get(`/api/reintegros-iva/beneficiarios/${id}/`, { withCredentials: true });
+    }
+    createVatBeneficiary(data) {
+        return this.http.post('/api/reintegros-iva/beneficiarios/', data, { withCredentials: true });
+    }
+    updateVatBeneficiary(id, data) {
+        return this.http.patch(`/api/reintegros-iva/beneficiarios/${id}/`, data, { withCredentials: true });
+    }
+    deleteVatBeneficiary(id) {
+        return this.http.delete(`/api/reintegros-iva/beneficiarios/${id}/`, { withCredentials: true });
+    }
+    getVatRefundDetails(beneficiaryId, period) {
+        return this.http.get(`/api/reintegros-iva/beneficiarios/${beneficiaryId}/detalles/`, { params: { periodo: period }, withCredentials: true });
+    }
+    createVatRefundDetail(beneficiaryId, data) {
+        return this.http.post(`/api/reintegros-iva/beneficiarios/${beneficiaryId}/detalles/`, data, { withCredentials: true });
+    }
+    updateVatRefundDetail(beneficiaryId, detailId, data) {
+        return this.http.patch(`/api/reintegros-iva/beneficiarios/${beneficiaryId}/detalles/${detailId}/`, data, { withCredentials: true });
+    }
+    deleteVatRefundDetail(beneficiaryId, detailId) {
+        return this.http.delete(`/api/reintegros-iva/beneficiarios/${beneficiaryId}/detalles/${detailId}/`, { withCredentials: true });
+    }
     // *====================== LOANS ======================*
     getLoans() {
         return this.http.get('/api/prestamos/', { withCredentials: true });

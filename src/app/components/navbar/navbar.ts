@@ -64,6 +64,16 @@ export class Navbar {
       label: 'Préstamos',
       icon: 'pi pi-money-bill',
       routerLink: '/prestamos'
+    },
+    {
+      label: 'Reintegro IVA',
+      icon: 'pi pi-percentage',
+      routerLink: '/reintegro-iva'
+    },
+    {
+      label: 'Gastos',
+      icon: 'pi pi-credit-card',
+      routerLink: '/gastos'
     }
   ];
 

@@ -24,6 +24,8 @@ export interface Loan {
   total_amount: string;
   paid_amount: string;
   balance: string;
+  collected_this_month: string;
+  overdue_installments: number;
   delivery_date: string;
   first_installment_period: string;
   installment_count: number;

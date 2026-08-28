@@ -19,6 +19,7 @@ import { Toast } from 'primeng/toast';
 import { Api } from '../../services/api';
 import { Employee } from '../../models/employee.model';
 import { CreateInstallmentRequest, CreateLoanRequest, InstallmentStatus, Loan, LoanInstallment, LoanKpis, LoanPersonType, UpdateInstallmentRequest } from '../../models/loan.model';
+import { formatMoneyInput, normalizeMoneyInput } from '../../utils/money-input';
 
 @Component({
   selector: 'app-prestamos',
@@ -95,6 +96,17 @@ export class Prestamos implements OnInit {
     );
   });
 
+  readonly filteredKpis = computed<LoanKpis>(() => {
+    const loans = this.filteredLoans();
+    return {
+      total_lent: String(loans.reduce((total, loan) => total + Number(loan.total_amount), 0)),
+      outstanding_balance: String(loans.reduce((total, loan) => total + Number(loan.balance), 0)),
+      collected_this_month: String(loans.reduce((total, loan) => total + Number(loan.collected_this_month ?? 0), 0)),
+      overdue_installments: loans.reduce((total, loan) => total + Number(loan.overdue_installments ?? 0), 0),
+      active_loans: loans.filter(loan => loan.status === 'ACTIVO').length
+    };
+  });
+
   ngOnInit(): void {
     void Promise.all([this.loadLoans(), this.loadEmployees()]);
   }
@@ -127,7 +139,7 @@ export class Prestamos implements OnInit {
   }
 
   async createLoan(): Promise<void> {
-    if (!this.form.total_amount || !this.form.delivery_date || !this.form.first_installment_period || !this.form.installment_count) {
+    if (Number(this.form.total_amount) <= 0 || !this.form.delivery_date || !this.form.first_installment_period || !this.form.installment_count) {
       this.showError('Completá los campos obligatorios.');
       return;
     }
@@ -141,6 +153,7 @@ export class Prestamos implements OnInit {
     }
     const payload: CreateLoanRequest = {
       ...this.form,
+      total_amount: Number(this.form.total_amount),
       delivery_date: this.toIsoDate(this.form.delivery_date),
       first_installment_period: this.toIsoDate(this.form.first_installment_period)
     };
@@ -174,8 +187,8 @@ export class Prestamos implements OnInit {
     this.selectedInstallment.set(item);
     this.installmentForm = {
       period: this.fromIsoDate(item.period),
-      expected_amount: Number(item.expected_amount),
-      paid_amount: Number(item.paid_amount),
+      expected_amount: item.expected_amount,
+      paid_amount: item.paid_amount === '0.00' || item.paid_amount === '0' ? '' : item.paid_amount,
       status: item.status,
       payment_date: item.payment_date ? this.fromIsoDate(item.payment_date) : null,
       payment_method: item.payment_method,
@@ -230,12 +243,14 @@ export class Prestamos implements OnInit {
   async saveInstallment(): Promise<void> {
     const loan = this.selectedLoan();
     const item = this.selectedInstallment();
-    if (!loan || !this.installmentForm.period || !this.installmentForm.expected_amount) {
+    if (!loan || !this.installmentForm.period || Number(this.installmentForm.expected_amount) <= 0) {
       this.showError('Completá el período y el importe previsto.');
       return;
     }
     const payload: UpdateInstallmentRequest = {
       ...this.installmentForm,
+      expected_amount: Number(this.installmentForm.expected_amount),
+      paid_amount: Number(this.installmentForm.paid_amount || 0),
       period: this.toIsoDate(this.installmentForm.period),
       payment_date: this.installmentForm.payment_date ? this.toIsoDate(this.installmentForm.payment_date) : null
     };
@@ -306,6 +321,10 @@ export class Prestamos implements OnInit {
     return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 2 }).format(Number(value ?? 0));
   }
 
+  formatMoneyInput(value: string): string { return formatMoneyInput(value); }
+  updateLoanAmount(value: string): void { const normalized = normalizeMoneyInput(value); if (normalized !== null) this.form.total_amount = normalized; }
+  updateInstallmentAmount(field: 'expected_amount' | 'paid_amount', value: string): void { const normalized = normalizeMoneyInput(value); if (normalized !== null) this.installmentForm[field] = normalized; }
+
   formatPeriod(value: string | null | undefined): string {
     if (!value) return '—';
     const date = this.fromIsoDate(value);
@@ -327,11 +346,11 @@ export class Prestamos implements OnInit {
 
   private emptyForm() {
     const now = new Date();
-    return { person_type: 'EMPLEADO' as LoanPersonType, employee_id: null as number | null, external_name: '', external_document: '', total_amount: 0, delivery_date: now, first_installment_period: new Date(now.getFullYear(), now.getMonth() + 1, 1), installment_count: 1, delivery_method: 'TRANSFERENCIA', notes: '' };
+    return { person_type: 'EMPLEADO' as LoanPersonType, employee_id: null as number | null, external_name: '', external_document: '', total_amount: '', delivery_date: now, first_installment_period: new Date(now.getFullYear(), now.getMonth() + 1, 1), installment_count: 1, delivery_method: 'TRANSFERENCIA', notes: '' };
   }
 
-  private emptyInstallmentForm(): { period: Date; expected_amount: number; paid_amount: number; status: InstallmentStatus; payment_date: Date | null; payment_method: string; notes: string } {
-    return { period: new Date(), expected_amount: 0, paid_amount: 0, status: 'PENDIENTE', payment_date: null, payment_method: '', notes: '' };
+  private emptyInstallmentForm(): { period: Date; expected_amount: string; paid_amount: string; status: InstallmentStatus; payment_date: Date | null; payment_method: string; notes: string } {
+    return { period: new Date(), expected_amount: '', paid_amount: '', status: 'PENDIENTE', payment_date: null, payment_method: '', notes: '' };
   }
 
   private toIsoDate(value: Date): string {

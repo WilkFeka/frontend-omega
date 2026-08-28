@@ -38,12 +38,73 @@ import {
   UpdateSalaryRequest
 } from '../models/salary.model';
 import { CreateInstallmentRequest, CreateLoanRequest, Loan, LoanListResponse, LoanInstallment, UpdateInstallmentRequest } from '../models/loan.model';
+import { VatBeneficiary, VatBeneficiaryListResponse, VatBeneficiaryRequest, VatRefundDetail, VatRefundDetailListResponse, VatRefundDetailRequest } from '../models/vat-refund.model';
+import { Expense, ExpenseListResponse, ExpenseRequest, PreviousExpenseResponse } from '../models/expense.model';
 
 
 @Service()
 export class Api {
 
   private readonly http = inject(HttpClient);
+
+  // *====================== EXPENSES ======================*
+
+  getExpenses(period: string): Observable<ExpenseListResponse> {
+    return this.http.get<ExpenseListResponse>('/api/gastos/', { params: { periodo: period }, withCredentials: true });
+  }
+  createExpense(data: ExpenseRequest): Observable<Expense> {
+    return this.http.post<Expense>('/api/gastos/', data, { withCredentials: true });
+  }
+  updateExpense(id: number, data: ExpenseRequest): Observable<Expense> {
+    return this.http.patch<Expense>(`/api/gastos/${id}/`, data, { withCredentials: true });
+  }
+  deleteExpense(id: number): Observable<void> {
+    return this.http.delete<void>(`/api/gastos/${id}/`, { withCredentials: true });
+  }
+  getPreviousExpenses(period: string): Observable<PreviousExpenseResponse> {
+    return this.http.get<PreviousExpenseResponse>('/api/gastos/copiar-anterior/', { params: { periodo: period }, withCredentials: true });
+  }
+  copyPreviousExpenses(period: string, expenseIds: number[]): Observable<{ created: number; skipped: number }> {
+    return this.http.post<{ created: number; skipped: number }>('/api/gastos/copiar-anterior/', { period, expense_ids: expenseIds }, { withCredentials: true });
+  }
+
+  // *====================== VAT REFUNDS ======================*
+
+  getVatBeneficiaries(period: string): Observable<VatBeneficiaryListResponse> {
+    return this.http.get<VatBeneficiaryListResponse>('/api/reintegros-iva/beneficiarios/', { params: { periodo: period }, withCredentials: true });
+  }
+
+  getVatBeneficiary(id: number): Observable<VatBeneficiary> {
+    return this.http.get<VatBeneficiary>(`/api/reintegros-iva/beneficiarios/${id}/`, { withCredentials: true });
+  }
+
+  createVatBeneficiary(data: VatBeneficiaryRequest): Observable<VatBeneficiary> {
+    return this.http.post<VatBeneficiary>('/api/reintegros-iva/beneficiarios/', data, { withCredentials: true });
+  }
+
+  updateVatBeneficiary(id: number, data: VatBeneficiaryRequest): Observable<VatBeneficiary> {
+    return this.http.patch<VatBeneficiary>(`/api/reintegros-iva/beneficiarios/${id}/`, data, { withCredentials: true });
+  }
+
+  deleteVatBeneficiary(id: number): Observable<void> {
+    return this.http.delete<void>(`/api/reintegros-iva/beneficiarios/${id}/`, { withCredentials: true });
+  }
+
+  getVatRefundDetails(beneficiaryId: number, period: string): Observable<VatRefundDetailListResponse> {
+    return this.http.get<VatRefundDetailListResponse>(`/api/reintegros-iva/beneficiarios/${beneficiaryId}/detalles/`, { params: { periodo: period }, withCredentials: true });
+  }
+
+  createVatRefundDetail(beneficiaryId: number, data: VatRefundDetailRequest): Observable<VatRefundDetail> {
+    return this.http.post<VatRefundDetail>(`/api/reintegros-iva/beneficiarios/${beneficiaryId}/detalles/`, data, { withCredentials: true });
+  }
+
+  updateVatRefundDetail(beneficiaryId: number, detailId: number, data: VatRefundDetailRequest): Observable<VatRefundDetail> {
+    return this.http.patch<VatRefundDetail>(`/api/reintegros-iva/beneficiarios/${beneficiaryId}/detalles/${detailId}/`, data, { withCredentials: true });
+  }
+
+  deleteVatRefundDetail(beneficiaryId: number, detailId: number): Observable<void> {
+    return this.http.delete<void>(`/api/reintegros-iva/beneficiarios/${beneficiaryId}/detalles/${detailId}/`, { withCredentials: true });
+  }
 
   // *====================== LOANS ======================*
 
