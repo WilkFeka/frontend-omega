@@ -52,6 +52,7 @@ export class Sueldos implements OnInit {
   readonly loading = signal(false);
   readonly search = signal('');
   readonly gremioFilter = signal('TODOS');
+  readonly groupFilter = signal<number | null>(null);
   readonly statusFilter = signal('TODOS');
   readonly transferFilter = signal('TODOS');
   readonly cashFilter = signal('TODOS');
@@ -109,6 +110,8 @@ export class Sueldos implements OnInit {
         this.gremioFilter() === 'TODOS'
         || (employee.gremio ?? '') === this.gremioFilter()
       );
+      const matchesGroup = this.groupFilter() === null
+        || employee.group?.id === this.groupFilter();
 
       const status = !row.salary
         ? 'PENDIENTE'
@@ -142,6 +145,7 @@ export class Sueldos implements OnInit {
       return (
         matchesSearch
         && matchesGremio
+        && matchesGroup
         && matchesStatus
         && matchesTransfer
         && matchesCash
@@ -163,6 +167,14 @@ export class Sueldos implements OnInit {
   readonly gremioOptions = computed(() => [
     { label: 'Todos los gremios', value: 'TODOS' },
     ...this.gremios().map(gremio => ({ label: gremio, value: gremio }))
+  ]);
+
+  readonly groupOptions = computed(() => [
+    { label: 'Todos los grupos', value: null },
+    ...[...new Map(
+      this.rows().flatMap(row => row.employee.group ? [[row.employee.group.id, row.employee.group]] : [])
+    ).values()].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'))
+      .map(group => ({ label: group.nombre, value: group.id }))
   ]);
 
 
@@ -288,6 +300,7 @@ export class Sueldos implements OnInit {
   resetFilters(): void {
     this.search.set('');
     this.gremioFilter.set('TODOS');
+    this.groupFilter.set(null);
     this.statusFilter.set('TODOS');
     this.transferFilter.set('TODOS');
     this.cashFilter.set('TODOS');

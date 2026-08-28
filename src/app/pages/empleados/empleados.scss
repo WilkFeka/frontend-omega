@@ -202,37 +202,6 @@ button.p-button.primary-button,
    TABLE CARD
    ========================================= */
 
-.section-tabs {
-  display: flex;
-  max-width: 1500px;
-  gap: 6px;
-  margin: 0 auto 18px;
-  padding: 5px;
-  background: #f4f4f5;
-  border-radius: 11px;
-
-  button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 38px;
-    gap: 7px;
-    padding: 0 16px;
-    color: #71717a;
-    background: transparent;
-    border: 0;
-    border-radius: 8px;
-    font-size: 0.8rem;
-    font-weight: 600;
-
-    &.active {
-      color: #7e22ce;
-      background: #ffffff;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-    }
-  }
-}
-
 .table-card {
   max-width: 1500px;
   margin: 0 auto;
@@ -250,9 +219,9 @@ button.p-button.primary-button,
 
 .table-toolbar {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
+  align-items: stretch;
+  flex-direction: column;
+  gap: 14px;
   padding: 20px;
   border-bottom: 1px solid #e4e4e7;
 
@@ -291,12 +260,38 @@ button.p-button.primary-button,
   }
 }
 
+.employee-filters {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+:host ::ng-deep .employee-filters .p-select {
+  min-width: 165px;
+}
+
 
 /* =========================================
    TABLE
    ========================================= */
 
 :host ::ng-deep {
+  .employees-page > .p-tabs {
+    max-width: 1500px;
+    margin: 0 auto;
+  }
+
+  .employees-page > .p-tabs .p-tabpanels {
+    padding: 20px 0 0;
+    background: transparent;
+  }
+
+  .employees-page > .p-tabs .p-tablist-tab-list {
+    background: transparent;
+  }
+
   .employees-table .p-datatable-table {
     min-width: 1100px;
   }
@@ -329,15 +324,6 @@ button.p-button.primary-button,
     border-radius: 0;
   }
 
-  .groups-table .p-datatable-thead > tr > th,
-  .groups-table .p-datatable-tbody > tr > td {
-    padding: 14px 16px;
-  }
-
-  .groups-table .p-datatable-thead > tr > th:last-child,
-  .groups-table .p-datatable-tbody > tr > td:last-child {
-    width: 130px;
-  }
 }
 
 .actions-column {
@@ -537,6 +523,11 @@ button.p-button.primary-button,
   }
 
   .employee-dialog .p-select {
+    width: 100%;
+  }
+
+  .employee-dialog .p-datepicker,
+  .employee-dialog .p-datepicker-input {
     width: 100%;
   }
 }

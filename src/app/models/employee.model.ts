@@ -4,6 +4,12 @@ export interface EmployeeGroup {
   employee_count: number;
 }
 
+export interface EmployeePosition {
+  id: number;
+  nombre: string;
+  employee_count: number;
+}
+
 export interface Employee {
   id: number;
   nombre: string;
@@ -16,6 +22,7 @@ export interface Employee {
   fecha_ingreso: string | null;
   fecha_baja: string | null;
   group: Pick<EmployeeGroup, 'id' | 'nombre'> | null;
+  position: Pick<EmployeePosition, 'id' | 'nombre'> | null;
 }
 
 export interface EmployeeListResponse {
@@ -34,6 +41,7 @@ export interface CreateEmployeeRequest {
   fecha_ingreso?: string | null;
   fecha_baja?: string | null;
   group_id?: number | null;
+  position_id?: number | null;
 }
 
 export interface UpdateEmployeeRequest {
@@ -47,6 +55,7 @@ export interface UpdateEmployeeRequest {
   fecha_ingreso?: string | null;
   fecha_baja?: string | null;
   group_id?: number | null;
+  position_id?: number | null;
 }
 
 export interface EmployeeGroupListResponse {
@@ -55,5 +64,14 @@ export interface EmployeeGroupListResponse {
 }
 
 export interface EmployeeGroupRequest {
+  nombre: string;
+}
+
+export interface EmployeePositionListResponse {
+  count: number;
+  positions: EmployeePosition[];
+}
+
+export interface EmployeePositionRequest {
   nombre: string;
 }

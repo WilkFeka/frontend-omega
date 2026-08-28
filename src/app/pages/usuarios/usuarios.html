@@ -143,12 +143,12 @@
       <ng-template #header>
 
         <tr>
-          <th>Nombre</th>
-          <th>Usuario</th>
-          <th>Email</th>
-          <th>Rol</th>
-          <th>Usuario</th>
-          <th>Acceso</th>
+          <th pSortableColumn="first_name">Nombre <p-sort-icon field="first_name" /></th>
+          <th pSortableColumn="username">Usuario <p-sort-icon field="username" /></th>
+          <th pSortableColumn="email">Email <p-sort-icon field="email" /></th>
+          <th pSortableColumn="role">Rol <p-sort-icon field="role" /></th>
+          <th pSortableColumn="is_active">Estado <p-sort-icon field="is_active" /></th>
+          <th pSortableColumn="is_staff">Acceso <p-sort-icon field="is_staff" /></th>
 
           <th class="actions-column">
             Acciones

@@ -203,6 +203,19 @@
     min-width: 0;
     flex: 1 1 auto;
   }
+
+  .salary-form .p-select {
+    width: 100%;
+  }
+
+  .salary-form .p-datepicker {
+    width: min(100%, 240px);
+  }
+
+  .salary-form .p-datepicker-input {
+    width: 100%;
+    min-width: 0;
+  }
 }
 
 

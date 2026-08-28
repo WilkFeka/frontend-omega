@@ -15,6 +15,9 @@ import {
   EmployeeGroup,
   EmployeeGroupListResponse,
   EmployeeGroupRequest,
+  EmployeePosition,
+  EmployeePositionListResponse,
+  EmployeePositionRequest,
   EmployeeListResponse,
   UpdateEmployeeRequest
 } from '../models/employee.model';
@@ -161,6 +164,23 @@ export class Api {
       `/api/empleados/grupos/${groupId}/`,
       { withCredentials: true }
     );
+  }
+
+
+  getEmployeePositions(): Observable<EmployeePositionListResponse> {
+    return this.http.get<EmployeePositionListResponse>('/api/empleados/cargos/', { withCredentials: true });
+  }
+
+  createEmployeePosition(data: EmployeePositionRequest): Observable<EmployeePosition> {
+    return this.http.post<EmployeePosition>('/api/empleados/cargos/', data, { withCredentials: true });
+  }
+
+  updateEmployeePosition(positionId: number, data: EmployeePositionRequest): Observable<EmployeePosition> {
+    return this.http.patch<EmployeePosition>(`/api/empleados/cargos/${positionId}/`, data, { withCredentials: true });
+  }
+
+  deleteEmployeePosition(positionId: number): Observable<void> {
+    return this.http.delete<void>(`/api/empleados/cargos/${positionId}/`, { withCredentials: true });
   }
 
 

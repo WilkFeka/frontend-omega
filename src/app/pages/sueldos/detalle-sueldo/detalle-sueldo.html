@@ -3,6 +3,8 @@
   [life]="3000"
 />
 
+<p-confirmdialog />
+
 <section class="salary-detail-page">
 
   <header class="detail-header">
@@ -308,12 +310,16 @@
               Fecha prevista de pago
             </label>
 
-            <input
-              pInputText
-              id="fecha_pago_prevista"
+            <p-datepicker
+              inputId="fecha_pago_prevista"
               name="fecha_pago_prevista"
-              type="date"
-              [(ngModel)]="salaryForm.fecha_pago_prevista"
+              dataType="string"
+              dateFormat="yy-mm-dd"
+              [showIcon]="true"
+              [showClear]="true"
+              [ngModel]="salaryForm.fecha_pago_prevista"
+              (ngModelChange)="salaryForm.fecha_pago_prevista = $event || ''"
+              [appendTo]="'body'"
             />
 
           </div>
@@ -325,19 +331,15 @@
               Moneda
             </label>
 
-            <select
-              id="moneda"
+            <p-select
+              inputId="moneda"
               name="moneda"
+              [options]="currencyOptions"
+              optionLabel="label"
+              optionValue="value"
               [(ngModel)]="salaryForm.moneda"
-            >
-              <option value="ARS">
-                ARS
-              </option>
-
-              <option value="USD">
-                USD
-              </option>
-            </select>
+              [appendTo]="'body'"
+            />
 
           </div>
 
@@ -536,12 +538,16 @@
                 Fecha de entrega
               </label>
 
-              <input
-                pInputText
-                id="fecha_entrega_recibo"
+              <p-datepicker
+                inputId="fecha_entrega_recibo"
                 name="fecha_entrega_recibo"
-                type="date"
-                [(ngModel)]="salaryForm.fecha_entrega_recibo"
+                dataType="string"
+                dateFormat="yy-mm-dd"
+                [showIcon]="true"
+                [showClear]="true"
+                [ngModel]="salaryForm.fecha_entrega_recibo"
+                (ngModelChange)="salaryForm.fecha_entrega_recibo = $event || ''"
+                [appendTo]="'body'"
               />
 
             </div>
@@ -708,8 +714,8 @@
           <ng-template #header>
 
             <tr>
-              <th>Descripción</th>
-              <th>Importe</th>
+              <th pSortableColumn="descripcion">Descripción <p-sort-icon field="descripcion" /></th>
+              <th pSortableColumn="importe">Importe <p-sort-icon field="importe" /></th>
               <th></th>
             </tr>
 
@@ -842,8 +848,8 @@
         <p-table [value]="additionals()" styleClass="discount-table">
           <ng-template #header>
             <tr>
-              <th>Descripción</th>
-              <th>Importe</th>
+              <th pSortableColumn="descripcion">Descripción <p-sort-icon field="descripcion" /></th>
+              <th pSortableColumn="importe">Importe <p-sort-icon field="importe" /></th>
               <th></th>
             </tr>
           </ng-template>

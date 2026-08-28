@@ -5,11 +5,14 @@ import { firstValueFrom } from 'rxjs';
 
 import { ButtonDirective } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
+import { DatePicker } from 'primeng/datepicker';
+import { ConfirmDialog } from 'primeng/confirmdialog';
 import { InputText } from 'primeng/inputtext';
-import { MessageService } from 'primeng/api';
+import { ConfirmationService, MessageService } from 'primeng/api';
 import { TableModule } from 'primeng/table';
 import { ToastModule } from 'primeng/toast';
 import { Select } from 'primeng/select';
+import { TabsModule } from 'primeng/tabs';
 
 import { Api } from '../../services/api';
 
@@ -17,8 +20,11 @@ import {
   CreateEmployeeRequest,
   Employee,
   EmployeeGroup,
+  EmployeePosition,
   UpdateEmployeeRequest
 } from '../../models/employee.model';
+import { Grupos } from './grupos/grupos';
+import { Cargos } from './cargos/cargos';
 
 
 interface EmployeeForm {
@@ -31,6 +37,7 @@ interface EmployeeForm {
   fecha_nacimiento: string;
   fecha_ingreso: string;
   group_id: number | null;
+  position_id: number | null;
 }
 
 
@@ -40,12 +47,17 @@ interface EmployeeForm {
     FormsModule,
     ButtonDirective,
     DialogModule,
+    DatePicker,
+    ConfirmDialog,
     InputText,
     TableModule,
     ToastModule,
-    Select
+    Select,
+    TabsModule,
+    Grupos,
+    Cargos
   ],
-  providers: [MessageService],
+  providers: [MessageService, ConfirmationService],
   templateUrl: './empleados.html',
   styleUrl: './empleados.scss'
 })
@@ -53,35 +65,31 @@ export class Empleados implements OnInit {
 
   private readonly api = inject(Api);
   private readonly messageService = inject(MessageService);
+  private readonly confirmationService = inject(ConfirmationService);
 
   readonly employees = signal<Employee[]>([]);
   readonly loading = signal(false);
   readonly saving = signal(false);
   readonly search = signal('');
-  readonly groupSearch = signal('');
-  readonly activeSection = signal<'employees' | 'groups'>('employees');
+  readonly activeSection = signal<'employees' | 'groups' | 'positions'>('employees');
   readonly groups = signal<EmployeeGroup[]>([]);
+  readonly positions = signal<EmployeePosition[]>([]);
+  readonly groupFilter = signal<number | null>(null);
+  readonly positionFilter = signal<number | null>(null);
+  readonly unionFilter = signal<string | null>(null);
+  readonly statusFilter = signal<'ALL' | 'ACTIVE' | 'INACTIVE'>('ALL');
 
   readonly dialogVisible = signal(false);
   readonly confirmVisible = signal(false);
-  readonly groupDialogVisible = signal(false);
-  readonly groupConfirmVisible = signal(false);
 
   readonly editingId = signal<number | null>(null);
   readonly employeeToDelete = signal<Employee | null>(null);
-  readonly editingGroupId = signal<number | null>(null);
-  readonly groupToDelete = signal<EmployeeGroup | null>(null);
-  groupName = '';
 
   form: EmployeeForm = this.createEmptyForm();
 
 
   readonly filteredEmployees = computed(() => {
     const term = this.search().trim().toLowerCase();
-
-    if (!term) {
-      return this.employees();
-    }
 
     return this.employees().filter(employee => {
       const values = [
@@ -94,9 +102,15 @@ export class Empleados implements OnInit {
         employee.telefono
       ];
 
-      return values.some(value =>
+      const matchesSearch = !term || values.some(value =>
         value?.toLowerCase().includes(term)
       );
+      const matchesGroup = this.groupFilter() === null || employee.group?.id === this.groupFilter();
+      const matchesPosition = this.positionFilter() === null || employee.position?.id === this.positionFilter();
+      const matchesUnion = this.unionFilter() === null || employee.gremio === this.unionFilter();
+      const matchesStatus = this.statusFilter() === 'ALL'
+        || (this.statusFilter() === 'ACTIVE' ? !employee.fecha_baja : !!employee.fecha_baja);
+      return matchesSearch && matchesGroup && matchesPosition && matchesUnion && matchesStatus;
     });
   });
 
@@ -115,23 +129,43 @@ export class Empleados implements OnInit {
     return this.employees().filter(employee => !!employee.fecha_ingreso).length;
   });
 
-
-  readonly filteredGroups = computed(() => {
-    const term = this.groupSearch().trim().toLowerCase();
-    return this.groups().filter(group =>
-      !term || group.nombre.toLowerCase().includes(term)
-    );
-  });
+  readonly activeCount = computed(() => this.employees().filter(employee => !employee.fecha_baja).length);
+  readonly inactiveCount = computed(() => this.employees().filter(employee => !!employee.fecha_baja).length);
 
 
   readonly groupOptions = computed(() => [
+    { label: 'Todos los grupos', value: null },
+    ...this.groups().map(group => ({ label: group.nombre, value: group.id }))
+  ]);
+  readonly assignmentGroupOptions = computed(() => [
     { label: 'Sin grupo', value: null },
     ...this.groups().map(group => ({ label: group.nombre, value: group.id }))
   ]);
 
+  readonly positionOptions = computed(() => [
+    { label: 'Todos los cargos', value: null },
+    ...this.positions().map(position => ({ label: position.nombre, value: position.id }))
+  ]);
+  readonly assignmentPositionOptions = computed(() => [
+    { label: 'Sin cargo', value: null },
+    ...this.positions().map(position => ({ label: position.nombre, value: position.id }))
+  ]);
+
+  readonly unionOptions = computed(() => [
+    { label: 'Todos los gremios', value: null },
+    ...[...new Set(this.employees().map(employee => employee.gremio).filter((value): value is string => !!value))]
+      .sort().map(value => ({ label: value, value }))
+  ]);
+
+  readonly statusOptions = [
+    { label: 'Todos los estados', value: 'ALL' },
+    { label: 'Activos', value: 'ACTIVE' },
+    { label: 'Dados de baja', value: 'INACTIVE' }
+  ];
+
 
   ngOnInit(): void {
-    void Promise.all([this.loadEmployees(), this.loadGroups()]);
+    void Promise.all([this.loadEmployees(), this.loadGroups(), this.loadPositions()]);
   }
 
 
@@ -142,6 +176,11 @@ export class Empleados implements OnInit {
     } catch (error) {
       this.showError(this.getApiError(error));
     }
+  }
+
+  async loadPositions(): Promise<void> {
+    try { this.positions.set((await firstValueFrom(this.api.getEmployeePositions())).positions); }
+    catch (error) { this.showError(this.getApiError(error)); }
   }
 
 
@@ -183,7 +222,8 @@ export class Empleados implements OnInit {
       telefono: employee.telefono ?? '',
       fecha_nacimiento: employee.fecha_nacimiento,
       fecha_ingreso: employee.fecha_ingreso ?? '',
-      group_id: employee.group?.id ?? null
+      group_id: employee.group?.id ?? null,
+      position_id: employee.position?.id ?? null
     };
 
     this.dialogVisible.set(true);
@@ -230,7 +270,8 @@ export class Empleados implements OnInit {
           telefono: this.form.telefono.trim() || null,
           fecha_nacimiento: this.form.fecha_nacimiento,
           fecha_ingreso: this.form.fecha_ingreso || null,
-          group_id: this.form.group_id
+          group_id: this.form.group_id,
+          position_id: this.form.position_id
         };
 
         await firstValueFrom(
@@ -253,7 +294,8 @@ export class Empleados implements OnInit {
           telefono: this.form.telefono.trim() || null,
           fecha_nacimiento: this.form.fecha_nacimiento,
           fecha_ingreso: this.form.fecha_ingreso || null,
-          group_id: this.form.group_id
+          group_id: this.form.group_id,
+          position_id: this.form.position_id
         };
 
         await firstValueFrom(
@@ -312,15 +354,23 @@ export class Empleados implements OnInit {
   }
 
 
-  async toggleEmployeeStatus(employee: Employee): Promise<void> {
+  toggleEmployeeStatus(employee: Employee): void {
     const reactivating = !!employee.fecha_baja;
-    const message = reactivating
-      ? '¿Confirmás que querés volver a dar de alta a este empleado?'
-      : '¿Confirmás la baja? El empleado dejará de aparecer en sueldos desde el mes actual.';
+    this.confirmationService.confirm({
+      header: reactivating ? 'Dar de alta' : 'Dar de baja',
+      message: reactivating
+        ? '¿Confirmás que querés volver a dar de alta a este empleado?'
+        : 'El empleado dejará de aparecer en sueldos desde el mes actual.',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: reactivating ? 'Dar de alta' : 'Dar de baja',
+      rejectLabel: 'Cancelar',
+      accept: () => void this.applyEmployeeStatus(employee)
+    });
+  }
 
-    if (!window.confirm(message)) {
-      return;
-    }
+
+  private async applyEmployeeStatus(employee: Employee): Promise<void> {
+    const reactivating = !!employee.fecha_baja;
 
     this.saving.set(true);
 
@@ -341,80 +391,6 @@ export class Empleados implements OnInit {
           : 'Empleado dado de baja correctamente.'
       );
 
-    } catch (error) {
-      this.showError(this.getApiError(error));
-    } finally {
-      this.saving.set(false);
-    }
-  }
-
-
-  openGroupCreate(): void {
-    this.editingGroupId.set(null);
-    this.groupName = '';
-    this.groupDialogVisible.set(true);
-  }
-
-
-  openGroupEdit(group: EmployeeGroup): void {
-    this.editingGroupId.set(group.id);
-    this.groupName = group.nombre;
-    this.groupDialogVisible.set(true);
-  }
-
-
-  async saveGroup(): Promise<void> {
-    const nombre = this.groupName.trim();
-
-    if (!nombre) {
-      this.showError('El nombre del grupo es obligatorio.');
-      return;
-    }
-
-    this.saving.set(true);
-
-    try {
-      const groupId = this.editingGroupId();
-
-      if (groupId === null) {
-        await firstValueFrom(this.api.createEmployeeGroup({ nombre }));
-        this.showSuccess('Grupo creado correctamente.');
-      } else {
-        await firstValueFrom(this.api.updateEmployeeGroup(groupId, { nombre }));
-        this.showSuccess('Grupo actualizado correctamente.');
-      }
-
-      this.groupDialogVisible.set(false);
-      await Promise.all([this.loadGroups(), this.loadEmployees()]);
-    } catch (error) {
-      this.showError(this.getApiError(error));
-    } finally {
-      this.saving.set(false);
-    }
-  }
-
-
-  askDeleteGroup(group: EmployeeGroup): void {
-    this.groupToDelete.set(group);
-    this.groupConfirmVisible.set(true);
-  }
-
-
-  async deleteGroup(): Promise<void> {
-    const group = this.groupToDelete();
-
-    if (!group) {
-      return;
-    }
-
-    this.saving.set(true);
-
-    try {
-      await firstValueFrom(this.api.deleteEmployeeGroup(group.id));
-      this.groupConfirmVisible.set(false);
-      this.groupToDelete.set(null);
-      await Promise.all([this.loadGroups(), this.loadEmployees()]);
-      this.showSuccess('Grupo eliminado correctamente.');
     } catch (error) {
       this.showError(this.getApiError(error));
     } finally {
@@ -469,7 +445,8 @@ export class Empleados implements OnInit {
       telefono: '',
       fecha_nacimiento: '',
       fecha_ingreso: '',
-      group_id: null
+      group_id: null,
+      position_id: null
     };
   }
 

@@ -14,9 +14,11 @@ import { firstValueFrom } from 'rxjs';
 
 import { ButtonDirective } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
+import { ConfirmDialog } from 'primeng/confirmdialog';
 import { DatePicker } from 'primeng/datepicker';
 import { InputText } from 'primeng/inputtext';
-import { MessageService } from 'primeng/api';
+import { Select } from 'primeng/select';
+import { ConfirmationService, MessageService } from 'primeng/api';
 import { TableModule } from 'primeng/table';
 import { ToastModule } from 'primeng/toast';
 
@@ -60,11 +62,13 @@ type MoneyField = 'importe_recibo' | 'ajuste_efectivo';
     ButtonDirective,
     DatePicker,
     DialogModule,
+    ConfirmDialog,
     InputText,
+    Select,
     TableModule,
     ToastModule
   ],
-  providers: [MessageService],
+  providers: [MessageService, ConfirmationService],
   templateUrl: './detalle-sueldo.html',
   styleUrl: './detalle-sueldo.scss'
 })
@@ -74,6 +78,7 @@ export class DetalleSueldo implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly messageService = inject(MessageService);
+  private readonly confirmationService = inject(ConfirmationService);
 
   readonly employee = signal<SalaryEmployee | null>(null);
   readonly salary = signal<Salary | null>(null);
@@ -106,6 +111,11 @@ export class DetalleSueldo implements OnInit {
   readonly transferReceipt = signal<File | null>(null);
 
   private readonly employeeId = this.getEmployeeId();
+
+  readonly currencyOptions = [
+    { label: 'ARS', value: 'ARS' },
+    { label: 'USD', value: 'USD' }
+  ];
 
 
   salaryForm: SalaryForm = this.createSalaryForm();
@@ -240,14 +250,14 @@ export class DetalleSueldo implements OnInit {
   }
 
 
-  changePeriod(periodo: string): void {
+  async changePeriod(periodo: string): Promise<void> {
     if (!periodo) {
       return;
     }
 
     if (this.hasUnsavedChanges()) {
-      const confirmed = window.confirm(
-        'Hay cambios sin guardar. ¿Querés descartarlos y cambiar de período?'
+      const confirmed = await this.confirmDiscardChanges(
+        '¿Querés descartar los cambios y cambiar de período?'
       );
 
       if (!confirmed) {
@@ -277,7 +287,7 @@ export class DetalleSueldo implements OnInit {
       return;
     }
 
-    this.changePeriod(
+    void this.changePeriod(
       `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, '0')}`
     );
   }
@@ -307,18 +317,36 @@ export class DetalleSueldo implements OnInit {
   }
 
 
-  canDeactivate(): boolean {
+  canDeactivate(): boolean | Promise<boolean> {
     if (this.skipNextGuard) {
       this.skipNextGuard = false;
       return true;
     }
 
-    return (
-      !this.hasUnsavedChanges()
-      || window.confirm(
-        'Hay cambios sin guardar. ¿Confirmás que querés salir y descartarlos?'
-      )
+    if (!this.hasUnsavedChanges()) {
+      return true;
+    }
+
+    return this.confirmDiscardChanges(
+      '¿Confirmás que querés salir y descartar los cambios sin guardar?'
     );
+  }
+
+
+  private confirmDiscardChanges(message: string): Promise<boolean> {
+    return new Promise(resolve => {
+      this.confirmationService.confirm({
+        header: 'Cambios sin guardar',
+        message,
+        icon: 'pi pi-exclamation-triangle',
+        acceptLabel: 'Descartar cambios',
+        rejectLabel: 'Continuar editando',
+        acceptButtonProps: { severity: 'danger' },
+        rejectButtonProps: { severity: 'secondary', outlined: true },
+        accept: () => resolve(true),
+        reject: () => resolve(false)
+      });
+    });
   }
 
 

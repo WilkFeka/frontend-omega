@@ -7,6 +7,7 @@ export interface SalaryEmployee {
   apellido: string;
   matricula: string | null;
   gremio: string | null;
+  group: { id: number; nombre: string } | null;
 }
 
 

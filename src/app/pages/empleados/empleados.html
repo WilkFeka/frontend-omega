@@ -3,6 +3,8 @@
   [life]="3000"
 />
 
+<p-confirmdialog />
+
 <section class="employees-page">
 
   <header class="page-header">
@@ -25,25 +27,19 @@
         <i class="pi pi-plus"></i>
         Nuevo empleado
       </button>
-    } @else {
-      <button pButton type="button" class="primary-button" (click)="openGroupCreate()">
-        <i class="pi pi-plus"></i>
-        Nuevo grupo
-      </button>
     }
 
   </header>
 
-  <nav class="section-tabs" aria-label="Secciones de empleados">
-    <button type="button" [class.active]="activeSection() === 'employees'" (click)="activeSection.set('employees')">
-      <i class="pi pi-users"></i> Empleados
-    </button>
-    <button type="button" [class.active]="activeSection() === 'groups'" (click)="activeSection.set('groups')">
-      <i class="pi pi-objects-column"></i> Grupos
-    </button>
-  </nav>
+  <p-tabs [value]="activeSection()" (valueChange)="activeSection.set($any($event))" [lazy]="true">
+    <p-tablist>
+      <p-tab value="employees"><i class="pi pi-users"></i>&nbsp; Empleados</p-tab>
+      <p-tab value="groups"><i class="pi pi-objects-column"></i>&nbsp; Grupos</p-tab>
+      <p-tab value="positions"><i class="pi pi-briefcase"></i>&nbsp; Cargos</p-tab>
+    </p-tablist>
 
-  @if (activeSection() === 'employees') {
+    <p-tabpanels>
+      <p-tabpanel value="employees">
 
 
   <!-- ====================== STATS ====================== -->
@@ -71,8 +67,8 @@
       </div>
 
       <div>
-        <span>Con matrícula</span>
-        <strong>{{ withMatricula() }}</strong>
+        <span>Activos</span>
+        <strong>{{ activeCount() }}</strong>
       </div>
 
     </article>
@@ -81,12 +77,12 @@
     <article class="stat-card">
 
       <div class="stat-icon phone">
-        <i class="pi pi-phone"></i>
+        <i class="pi pi-user-minus"></i>
       </div>
 
       <div>
-        <span>Con teléfono</span>
-        <strong>{{ withPhone() }}</strong>
+        <span>Dados de baja</span>
+        <strong>{{ inactiveCount() }}</strong>
       </div>
 
     </article>
@@ -95,12 +91,12 @@
     <article class="stat-card">
 
       <div class="stat-icon entry">
-        <i class="pi pi-calendar"></i>
+        <i class="pi pi-objects-column"></i>
       </div>
 
       <div>
-        <span>Con fecha de ingreso</span>
-        <strong>{{ withEntryDate() }}</strong>
+        <span>Grupos</span>
+        <strong>{{ groups().length }}</strong>
       </div>
 
     </article>
@@ -124,6 +120,12 @@
       </div>
 
 
+      <div class="employee-filters">
+        <p-select [options]="groupOptions()" optionLabel="label" optionValue="value" [ngModel]="groupFilter()" (ngModelChange)="groupFilter.set($event)" [appendTo]="'body'" />
+        <p-select [options]="positionOptions()" optionLabel="label" optionValue="value" [ngModel]="positionFilter()" (ngModelChange)="positionFilter.set($event)" [appendTo]="'body'" />
+        <p-select [options]="unionOptions()" optionLabel="label" optionValue="value" [ngModel]="unionFilter()" (ngModelChange)="unionFilter.set($event)" [appendTo]="'body'" />
+        <p-select [options]="statusOptions" optionLabel="label" optionValue="value" [ngModel]="statusFilter()" (ngModelChange)="statusFilter.set($event)" [appendTo]="'body'" />
+
       <div class="search-wrapper">
 
         <i
@@ -139,6 +141,8 @@
           [ngModel]="search()"
           (ngModelChange)="search.set($event)"
         />
+
+      </div>
 
       </div>
 
@@ -158,13 +162,13 @@
       <ng-template #header>
 
         <tr>
-          <th>Empleado</th>
-          <th>Grupo</th>
-          <th>Matrícula</th>
-          <th>Teléfono</th>
-          <th>Dirección</th>
-          <th>Fecha nac.</th>
-          <th>Fecha ingreso</th>
+          <th pSortableColumn="apellido">Empleado <p-sort-icon field="apellido" /></th>
+          <th pSortableColumn="group.nombre">Grupo <p-sort-icon field="group.nombre" /></th>
+          <th pSortableColumn="position.nombre">Cargo <p-sort-icon field="position.nombre" /></th>
+          <th pSortableColumn="gremio">Gremio <p-sort-icon field="gremio" /></th>
+          <th pSortableColumn="matricula">Matrícula <p-sort-icon field="matricula" /></th>
+          <th pSortableColumn="telefono">Teléfono <p-sort-icon field="telefono" /></th>
+          <th pSortableColumn="fecha_ingreso">Fecha ingreso <p-sort-icon field="fecha_ingreso" /></th>
 
           <th class="actions-column">
             Acciones
@@ -206,6 +210,10 @@
 
           <td>{{ employee.group?.nombre || '-' }}</td>
 
+          <td>{{ employee.position?.nombre || '-' }}</td>
+
+          <td>{{ employee.gremio || '-' }}</td>
+
 
           <td>
 
@@ -224,16 +232,6 @@
 
           <td>
             {{ employee.telefono || '-' }}
-          </td>
-
-
-          <td>
-            {{ employee.direccion || '-' }}
-          </td>
-
-
-          <td>
-            {{ formatDate(employee.fecha_nacimiento) }}
           </td>
 
 
@@ -320,60 +318,17 @@
 
   </section>
 
-  } @else {
+      </p-tabpanel>
 
-    <section class="table-card groups-card">
-      <div class="table-toolbar">
-        <div>
-          <h2>Grupos</h2>
-          <span>{{ filteredGroups().length }} resultados</span>
-        </div>
-        <div class="search-wrapper">
-          <i class="pi pi-search" aria-hidden="true"></i>
-          <input pInputText type="search" placeholder="Buscar grupo..." aria-label="Buscar grupo"
-            [ngModel]="groupSearch()" (ngModelChange)="groupSearch.set($event)" />
-        </div>
-      </div>
+      <p-tabpanel value="groups">
+        <app-grupos (groupsChanged)="loadGroups(); loadEmployees()" />
+      </p-tabpanel>
 
-      <p-table [value]="filteredGroups()" [loading]="loading()" styleClass="groups-table">
-        <ng-template #header>
-          <tr>
-            <th>Nombre</th>
-            <th>Empleados asignados</th>
-            <th class="actions-column">Acciones</th>
-          </tr>
-        </ng-template>
-        <ng-template #body let-group>
-          <tr>
-            <td><strong>{{ group.nombre }}</strong></td>
-            <td>{{ group.employee_count }}</td>
-            <td>
-              <div class="actions">
-                <button type="button" class="icon-button" title="Editar" (click)="openGroupEdit(group)">
-                  <i class="pi pi-pencil"></i>
-                </button>
-                <button type="button" class="icon-button danger" title="Eliminar" (click)="askDeleteGroup(group)">
-                  <i class="pi pi-trash"></i>
-                </button>
-              </div>
-            </td>
-          </tr>
-        </ng-template>
-        <ng-template #emptymessage>
-          <tr>
-            <td colspan="3">
-              <div class="empty-state">
-                <i class="pi pi-objects-column"></i>
-                <strong>No hay grupos</strong>
-                <span>No encontramos grupos con la búsqueda actual.</span>
-              </div>
-            </td>
-          </tr>
-        </ng-template>
-      </p-table>
-    </section>
-
-  }
+      <p-tabpanel value="positions">
+        <app-cargos (positionsChanged)="loadPositions(); loadEmployees()" />
+      </p-tabpanel>
+    </p-tabpanels>
+  </p-tabs>
 
 </section>
 
@@ -498,7 +453,7 @@
         <p-select
           inputId="employee_group"
           name="employee_group"
-          [options]="groupOptions()"
+          [options]="assignmentGroupOptions()"
           optionLabel="label"
           optionValue="value"
           [ngModel]="form.group_id"
@@ -506,6 +461,14 @@
           [appendTo]="'body'"
           placeholder="Seleccionar grupo"
         />
+      </div>
+
+      <div class="field">
+        <label for="employee_position">Cargo</label>
+        <p-select inputId="employee_position" name="employee_position"
+          [options]="assignmentPositionOptions()" optionLabel="label" optionValue="value"
+          [ngModel]="form.position_id" (ngModelChange)="form.position_id = $event"
+          [appendTo]="'body'" placeholder="Seleccionar cargo" />
       </div>
 
 
@@ -533,13 +496,15 @@
           <span>*</span>
         </label>
 
-        <input
-          pInputText
-          id="fecha_nacimiento"
+        <p-datepicker
+          inputId="fecha_nacimiento"
           name="fecha_nacimiento"
-          type="date"
-          [(ngModel)]="form.fecha_nacimiento"
-          required
+          dataType="string"
+          dateFormat="yy-mm-dd"
+          [showIcon]="true"
+          [ngModel]="form.fecha_nacimiento"
+          (ngModelChange)="form.fecha_nacimiento = $event"
+          [appendTo]="'body'"
         />
 
       </div>
@@ -551,12 +516,16 @@
           Fecha de ingreso
         </label>
 
-        <input
-          pInputText
-          id="fecha_ingreso"
+        <p-datepicker
+          inputId="fecha_ingreso"
           name="fecha_ingreso"
-          type="date"
-          [(ngModel)]="form.fecha_ingreso"
+          dataType="string"
+          dateFormat="yy-mm-dd"
+          [showIcon]="true"
+          [showClear]="true"
+          [ngModel]="form.fecha_ingreso"
+          (ngModelChange)="form.fecha_ingreso = $event || ''"
+          [appendTo]="'body'"
         />
 
       </div>
@@ -601,67 +570,6 @@
 
   </form>
 
-</p-dialog>
-
-
-<!-- ====================== CREAR / EDITAR GRUPO ====================== -->
-
-<p-dialog
-  [visible]="groupDialogVisible()"
-  (visibleChange)="groupDialogVisible.set($event)"
-  [modal]="true"
-  [draggable]="false"
-  [resizable]="false"
-  [header]="editingGroupId() === null ? 'Nuevo grupo' : 'Editar grupo'"
-  [style]="{ width: 'min(460px, calc(100vw - 32px))' }"
->
-  <form class="employee-form" (ngSubmit)="saveGroup()">
-    <div class="field">
-      <label for="group_name">Nombre <span>*</span></label>
-      <input pInputText id="group_name" name="group_name" [(ngModel)]="groupName" required />
-    </div>
-
-    <div class="dialog-actions">
-      <button type="button" class="secondary-button" [disabled]="saving()" (click)="groupDialogVisible.set(false)">
-        Cancelar
-      </button>
-      <button pButton type="submit" class="primary-button" [disabled]="saving()">
-        @if (saving()) { <i class="pi pi-spinner pi-spin"></i> } @else { <i class="pi pi-check"></i> }
-        Guardar
-      </button>
-    </div>
-  </form>
-</p-dialog>
-
-
-<!-- ====================== ELIMINAR GRUPO ====================== -->
-
-<p-dialog
-  [visible]="groupConfirmVisible()"
-  (visibleChange)="groupConfirmVisible.set($event)"
-  [modal]="true"
-  [draggable]="false"
-  [resizable]="false"
-  header="Eliminar grupo"
-  [style]="{ width: 'min(460px, calc(100vw - 32px))' }"
->
-  <div class="confirm-content">
-    <div class="confirm-icon"><i class="pi pi-exclamation-triangle"></i></div>
-    <div>
-      <strong>¿Eliminar el grupo {{ groupToDelete()?.nombre }}?</strong>
-      <p>Los empleados asignados quedarán sin grupo, pero no se eliminarán.</p>
-    </div>
-  </div>
-
-  <div class="dialog-actions">
-    <button type="button" class="secondary-button" [disabled]="saving()" (click)="groupConfirmVisible.set(false)">
-      Cancelar
-    </button>
-    <button type="button" class="danger-button" [disabled]="saving()" (click)="deleteGroup()">
-      @if (saving()) { <i class="pi pi-spinner pi-spin"></i> } @else { <i class="pi pi-trash"></i> }
-      Eliminar
-    </button>
-  </div>
 </p-dialog>
 
 

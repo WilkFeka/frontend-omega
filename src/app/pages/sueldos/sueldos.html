@@ -165,6 +165,16 @@
         />
 
         <p-select
+          aria-label="Filtrar por grupo"
+          [appendTo]="'body'"
+          [options]="groupOptions()"
+          optionLabel="label"
+          optionValue="value"
+          [ngModel]="groupFilter()"
+          (ngModelChange)="groupFilter.set($event)"
+        />
+
+        <p-select
           aria-label="Filtrar por transferencia"
           [appendTo]="'body'"
           [options]="transferOptions"
@@ -246,32 +256,37 @@
       <ng-template #header>
 
         <tr>
-          <th>Empleado</th>
-          <th>Gremio</th>
-          <th>
+          <th pSortableColumn="employee.apellido">Empleado <p-sort-icon field="employee.apellido" /></th>
+          <th pSortableColumn="employee.gremio">Gremio <p-sort-icon field="employee.gremio" /></th>
+          <th pSortableColumn="salary.importe_recibo">
             <span class="header-with-tooltip" pTooltip="Importe neto oficial que figura en el recibo de sueldo." tooltipPosition="top">
               Recibo <i class="pi pi-info-circle"></i>
             </span>
+            <p-sort-icon field="salary.importe_recibo" />
           </th>
-          <th>
+          <th pSortableColumn="salary.descuentos_total">
             <span class="header-with-tooltip" pTooltip="Suma de todos los descuentos cargados en la liquidación." tooltipPosition="top">
               Descuentos <i class="pi pi-info-circle"></i>
             </span>
+            <p-sort-icon field="salary.descuentos_total" />
           </th>
-          <th>
+          <th pSortableColumn="salary.transferencia_real">
             <span class="header-with-tooltip" pTooltip="Transferencia real = recibo de sueldo menos descuentos." tooltipPosition="top">
               Transferencia <i class="pi pi-info-circle"></i>
             </span>
+            <p-sort-icon field="salary.transferencia_real" />
           </th>
-          <th>
+          <th pSortableColumn="salary.ajuste_efectivo">
             <span class="header-with-tooltip" pTooltip="Importe del ajuste adicional entregado en efectivo." tooltipPosition="top">
               Efectivo <i class="pi pi-info-circle"></i>
             </span>
+            <p-sort-icon field="salary.ajuste_efectivo" />
           </th>
-          <th>
+          <th pSortableColumn="salary.sueldo_total">
             <span class="header-with-tooltip" pTooltip="Sueldo total = transferencia real + efectivo + adicionales." tooltipPosition="top">
               Sueldo total <i class="pi pi-info-circle"></i>
             </span>
+            <p-sort-icon field="salary.sueldo_total" />
           </th>
           <th></th>
         </tr>
