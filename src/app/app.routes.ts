@@ -5,6 +5,7 @@ import { Usuarios } from './pages/usuarios/usuarios';
 import { Empleados } from './pages/empleados/empleados';
 import { Sueldos } from './pages/sueldos/sueldos';
 import { DetalleSueldo } from './pages/sueldos/detalle-sueldo/detalle-sueldo';
+import { Prestamos } from './pages/prestamos/prestamos';
 import { authGuard } from './guards/auth-guard';
 import { guestGuard } from './guards/auth-guard';
 
@@ -14,6 +15,7 @@ export const routes: Routes = [
   { path: 'usuarios', component: Usuarios, canActivate: [authGuard] },
   { path: 'empleados', component: Empleados, canActivate: [authGuard] },
   { path: 'sueldos', component: Sueldos, canActivate: [authGuard] },
+  { path: 'prestamos', component: Prestamos, canActivate: [authGuard] },
   {
     path: 'sueldos/:employeeId',
     component: DetalleSueldo,

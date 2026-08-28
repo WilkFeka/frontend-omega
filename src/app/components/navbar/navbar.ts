@@ -59,6 +59,11 @@ export class Navbar {
       label: 'Sueldos',
       icon: 'pi pi-wallet',
       routerLink: '/sueldos'
+    },
+    {
+      label: 'Préstamos',
+      icon: 'pi pi-money-bill',
+      routerLink: '/prestamos'
     }
   ];
 

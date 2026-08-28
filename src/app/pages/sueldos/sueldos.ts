@@ -12,6 +12,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
 import { InputText } from 'primeng/inputtext';
+import { ButtonDirective } from 'primeng/button';
 import { DatePicker } from 'primeng/datepicker';
 import { Select } from 'primeng/select';
 import { MessageService } from 'primeng/api';
@@ -30,6 +31,7 @@ import {
   selector: 'app-sueldos',
   imports: [
     FormsModule,
+    ButtonDirective,
     DatePicker,
     InputText,
     Select,

@@ -229,8 +229,11 @@
         </div>
 
         <button
+          pButton
           type="button"
-          class="reset-filters-button"
+          [text]="true"
+          [rounded]="true"
+          severity="secondary"
           title="Restablecer filtros"
           aria-label="Restablecer filtros"
           (click)="resetFilters()"

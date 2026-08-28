@@ -37,12 +37,47 @@ import {
   UpdateSalaryAdditionalRequest,
   UpdateSalaryRequest
 } from '../models/salary.model';
+import { CreateInstallmentRequest, CreateLoanRequest, Loan, LoanListResponse, LoanInstallment, UpdateInstallmentRequest } from '../models/loan.model';
 
 
 @Service()
 export class Api {
 
   private readonly http = inject(HttpClient);
+
+  // *====================== LOANS ======================*
+
+  getLoans(): Observable<LoanListResponse> {
+    return this.http.get<LoanListResponse>('/api/prestamos/', { withCredentials: true });
+  }
+
+  getLoan(loanId: number): Observable<Loan> {
+    return this.http.get<Loan>(`/api/prestamos/${loanId}/`, { withCredentials: true });
+  }
+
+  createLoan(data: CreateLoanRequest): Observable<Loan> {
+    return this.http.post<Loan>('/api/prestamos/', data, { withCredentials: true });
+  }
+
+  updateLoan(loanId: number, data: Partial<Loan>): Observable<Loan> {
+    return this.http.patch<Loan>(`/api/prestamos/${loanId}/`, data, { withCredentials: true });
+  }
+
+  deleteLoan(loanId: number): Observable<void> {
+    return this.http.delete<void>(`/api/prestamos/${loanId}/`, { withCredentials: true });
+  }
+
+  updateLoanInstallment(loanId: number, installmentId: number, data: UpdateInstallmentRequest): Observable<LoanInstallment> {
+    return this.http.patch<LoanInstallment>(`/api/prestamos/${loanId}/cuotas/${installmentId}/`, data, { withCredentials: true });
+  }
+
+  createLoanInstallment(loanId: number, data: CreateInstallmentRequest): Observable<LoanInstallment> {
+    return this.http.post<LoanInstallment>(`/api/prestamos/${loanId}/cuotas/`, data, { withCredentials: true });
+  }
+
+  deleteLoanInstallment(loanId: number, installmentId: number): Observable<void> {
+    return this.http.delete<void>(`/api/prestamos/${loanId}/cuotas/${installmentId}/`, { withCredentials: true });
+  }
 
 
   // *====================== USERS ======================*

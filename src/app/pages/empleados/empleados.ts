@@ -364,8 +364,18 @@ export class Empleados implements OnInit {
       icon: 'pi pi-exclamation-triangle',
       acceptLabel: reactivating ? 'Dar de alta' : 'Dar de baja',
       rejectLabel: 'Cancelar',
+      rejectButtonProps: { severity: 'secondary', outlined: true },
       accept: () => void this.applyEmployeeStatus(employee)
     });
+  }
+
+
+  resetFilters(): void {
+    this.search.set('');
+    this.groupFilter.set(null);
+    this.positionFilter.set(null);
+    this.unionFilter.set(null);
+    this.statusFilter.set('ALL');
   }
 
 
