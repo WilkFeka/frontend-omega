@@ -1,0 +1,186 @@
+<p-toast position="bottom-right" />
+<section class="detail-page">
+  <header class="detail-header">
+    <div class="header-left">
+      <button type="button" class="back-button" aria-label="Volver" (click)="back()">
+        <i class="pi pi-arrow-left"></i>
+      </button>
+      <div>
+        <span class="eyebrow">Reintegro IVA</span>
+        <h1>{{ beneficiary()?.apellido }}, {{ beneficiary()?.nombre }}</h1>
+        <p>Detalles que componen el total del período.</p>
+      </div>
+    </div>
+    <div class="period-selector">
+      <label for="vat_detail_period">Período</label>
+      <div class="period-navigation">
+        <button type="button" aria-label="Mes anterior" (click)="movePeriod(-1)">
+          <i class="pi pi-chevron-left"></i></button
+        ><p-datepicker
+          inputId="vat_detail_period"
+          view="month"
+          dateFormat="mm/yy"
+          [showIcon]="true"
+          [readonlyInput]="true"
+          [ngModel]="periodDate()"
+          (ngModelChange)="changePeriodDate($event)"
+        /><button type="button" aria-label="Mes siguiente" (click)="movePeriod(1)">
+          <i class="pi pi-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+  <section class="summary">
+    <div>
+      <small>Período</small><strong>{{ formatPeriod() }}</strong>
+    </div>
+    <div>
+      <small>Cantidad de detalles</small><strong>{{ details().length }}</strong>
+    </div>
+    <div class="total">
+      <small>Total reintegro</small><strong>{{ formatCurrency(total()) }}</strong>
+    </div>
+  </section>
+  <section class="table-card">
+    <div class="table-toolbar">
+      <div>
+        <h2>Composición del reintegro</h2>
+        <span>{{ details().length }} detalles</span>
+      </div>
+      <button pButton type="button" (click)="openCreate()"><i class="pi pi-plus"></i> Agregar importe</button>
+    </div>
+    <p-table
+      class="desktop-data-table"
+      [value]="details()"
+      [loading]="loading()"
+      [paginator]="details().length > 10"
+      [rows]="10"
+      styleClass="vat-detail-table"
+      ><ng-template #header
+        ><tr>
+          <th>#</th>
+          <th>Período</th>
+          <th pSortableColumn="observation">Observación <p-sort-icon field="observation" /></th>
+          <th pSortableColumn="amount">Importe <p-sort-icon field="amount" /></th>
+          <th></th></tr></ng-template
+      ><ng-template #body let-item let-index="rowIndex"
+        ><tr>
+          <td>{{ index + 1 }}</td>
+          <td>{{ formatPeriod() }}</td>
+          <td>{{ item.observation || 'Sin observación' }}</td>
+          <td class="amount">{{ formatCurrency(item.amount) }}</td>
+          <td>
+            <div class="actions">
+              <button
+                pButton
+                type="button"
+                [text]="true"
+                [rounded]="true"
+                title="Editar"
+                (click)="openEdit(item)"
+              >
+                <i class="pi pi-pencil"></i></button
+              ><button
+                pButton
+                type="button"
+                [text]="true"
+                [rounded]="true"
+                severity="danger"
+                title="Eliminar"
+                (click)="askDelete(item)"
+              >
+                <i class="pi pi-trash"></i>
+              </button>
+            </div>
+          </td></tr></ng-template
+      ><ng-template #emptymessage
+        ><tr>
+          <td colspan="5">
+            <div class="empty">
+              <i class="pi pi-receipt"></i><strong>No hay detalles en este período</strong
+              ><span>Agregá un importe para comenzar.</span>
+            </div>
+          </td>
+        </tr></ng-template
+      ><ng-template #footer
+        ><tr class="total-row">
+          <td colspan="3">Total</td>
+          <td>{{ formatCurrency(total()) }}</td>
+          <td></td></tr></ng-template
+      ></p-table>
+    <div class="mobile-record-list">
+      @for (item of details(); track item.id; let index = $index) {
+        <article class="mobile-record-card" tabindex="0">
+          <div class="mobile-record-header"><div class="mobile-record-avatar">{{ index + 1 }}</div><div><small>Período</small><strong>{{ formatPeriod() }}</strong></div></div>
+          <div class="mobile-record-grid"><div><small>Observación</small><strong>{{ item.observation || 'Sin observación' }}</strong></div><div><small>Importe</small><strong class="mobile-record-positive">{{ formatCurrency(item.amount) }}</strong></div></div>
+          <div class="mobile-record-actions"><button pButton type="button" severity="secondary" [outlined]="true" size="small" (click)="openEdit(item)"><i class="pi pi-pencil"></i> Editar</button><button pButton type="button" severity="danger" [text]="true" size="small" (click)="askDelete(item)"><i class="pi pi-trash"></i> Eliminar</button></div>
+        </article>
+      } @empty { <div class="mobile-record-empty"><i class="pi pi-receipt"></i><strong>No hay detalles en este período</strong></div> }
+    </div>
+  </section>
+</section>
+<p-dialog
+  [visible]="dialogVisible()"
+  (visibleChange)="dialogVisible.set($event)"
+  [header]="editing() ? 'Editar importe' : 'Agregar importe'"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: 'min(540px, calc(100vw - 32px))' }"
+  ><form class="form" (ngSubmit)="save()">
+    <div class="field">
+      <label>Importe *</label
+      ><div class="money-input"><span>$</span><input pInputText name="amount" type="text" inputmode="decimal" [ngModel]="formatMoneyInput(form.amount)" (ngModelChange)="updateAmount($event)" /></div>
+    </div>
+    <div class="field">
+      <label>Observación</label
+      ><textarea
+        pTextarea
+        name="observation"
+        [(ngModel)]="form.observation"
+        rows="3"
+        placeholder="Opcional"
+      ></textarea>
+    </div>
+    <div class="dialog-actions">
+      <button
+        pButton
+        type="button"
+        severity="secondary"
+        [outlined]="true"
+        (click)="dialogVisible.set(false)"
+      >
+        Cancelar</button
+      ><button pButton type="submit" [loading]="saving()">Guardar</button>
+    </div>
+  </form></p-dialog
+>
+<p-dialog
+  [visible]="confirmVisible()"
+  (visibleChange)="confirmVisible.set($event)"
+  header="Eliminar detalle"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: 'min(450px, calc(100vw - 32px))' }"
+  ><div class="confirm">
+    <i class="pi pi-exclamation-triangle"></i>
+    <div>
+      <strong>¿Eliminar este importe?</strong>
+      <p>{{ formatCurrency(toDelete()?.amount) }} dejará de formar parte del total mensual.</p>
+    </div>
+  </div>
+  <div class="dialog-actions">
+    <button
+      pButton
+      type="button"
+      severity="secondary"
+      [outlined]="true"
+      (click)="confirmVisible.set(false)"
+    >
+      Cancelar</button
+    ><button pButton type="button" severity="danger" [loading]="saving()" (click)="delete()">
+      Eliminar
+    </button>
+  </div></p-dialog
+>

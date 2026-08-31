@@ -77,6 +77,277 @@ a {
   color: inherit;
 }
 
+.mobile-record-list { display: none; }
+
+.table-toolbar {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  flex-direction: row !important;
+  flex-wrap: wrap !important;
+  gap: 10px !important;
+  padding: 18px 20px !important;
+}
+.table-toolbar > div:first-child { order: 1; }
+.filter-toggle-input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.filter-toggle { display: inline-grid !important; width: 40px !important; height: 40px !important; min-width: 40px; flex: 0 0 40px !important; order: 4; margin-left: auto; padding: 0 !important; place-items: center; color: #64748b; background: #fff; border: 1px solid #d4d4d8; border-radius: 9px; cursor: pointer; transition: color 150ms ease, background 150ms ease, border-color 150ms ease; }
+.filter-toggle i { font-size: .9rem; }
+.filter-toggle:hover { color: #7e22ce; background: #faf5ff; border-color: #d8b4fe; }
+.table-toolbar > .primary-button { width: auto !important; min-height: 40px; flex: 0 0 auto !important; order: 3; margin-left: auto; white-space: nowrap; }
+.table-toolbar:has(> .primary-button) > .filter-toggle { margin-left: 0; }
+.table-toolbar :is(.filters, .employee-filters, .toolbar-filters) {
+  display: flex !important;
+  width: 100% !important;
+  order: 10;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  flex-direction: row !important;
+  flex-wrap: wrap !important;
+  gap: 10px !important;
+  margin-top: 6px;
+  padding-top: 14px;
+  border-top: 1px solid #f0f0f1;
+  animation: filters-reveal 180ms ease both;
+}
+.table-toolbar :is(.filters, .employee-filters, .toolbar-filters) > p-select { min-width: 180px !important; max-width: 240px; flex: 1 1 180px; }
+.table-toolbar :is(.filters, .employee-filters, .toolbar-filters) .p-select { width: 100% !important; min-height: 40px; }
+.table-toolbar :is(.filters, .employee-filters, .toolbar-filters) :is(.search, .search-wrapper) { width: auto !important; min-width: 220px; max-width: 320px; flex: 2 1 240px; }
+.table-toolbar :is(.filters, .employee-filters, .toolbar-filters) :is(.search, .search-wrapper) input { width: 100% !important; height: 40px !important; }
+.table-toolbar :is(.filters, .employee-filters, .toolbar-filters) > button { width: 40px !important; height: 40px !important; flex: 0 0 40px; padding: 0 !important; }
+.table-toolbar:has(.filter-toggle-input:checked) :is(.filters, .employee-filters, .toolbar-filters) { display: none !important; }
+
+@keyframes filters-reveal {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* =========================================
+   MOBILE APPLICATION LAYOUT
+   ========================================= */
+
+@media (max-width: 768px) {
+  .table-toolbar { align-items: center !important; flex-direction: row !important; padding: 15px !important; }
+  .table-toolbar > div:first-child { flex: 1 1 auto; }
+  .table-toolbar > .primary-button { max-width: calc(100% - 50px); margin-left: 0; }
+  .table-toolbar > .filter-toggle { margin-left: auto !important; }
+  .table-toolbar :is(.filters, .employee-filters, .toolbar-filters) { display: none !important; }
+  .table-toolbar:has(.filter-toggle-input:checked) :is(.filters, .employee-filters, .toolbar-filters) { display: flex !important; }
+  .table-toolbar :is(.filters, .employee-filters, .toolbar-filters) { align-items: stretch !important; flex-direction: column !important; }
+  .table-toolbar :is(.filters, .employee-filters, .toolbar-filters) > * { width: 100% !important; max-width: none !important; }
+
+  body {
+    padding-bottom: calc(92px + env(safe-area-inset-bottom));
+    background: #f8fafc;
+  }
+
+  body :is(.employees-page, .users-page, .salaries-page, .salary-detail-page, .loans-page, .vat-page, .detail-page, .expenses-page) {
+    min-height: calc(100vh - 64px) !important;
+    padding: 20px 14px 28px !important;
+  }
+
+  body :is(.employees-page, .users-page, .salaries-page, .loans-page, .vat-page, .expenses-page) .page-header,
+  body :is(.salary-detail-page, .detail-page) :is(.detail-header, .page-header) {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  body :is(.header-actions, .period-selector, .period-navigation) {
+    max-width: 100%;
+  }
+
+  body .period-navigation {
+    justify-content: space-between;
+  }
+
+  body .period-navigation p-datepicker,
+  body .period-navigation .p-datepicker {
+    width: min(210px, calc(100vw - 132px)) !important;
+    flex: 1 1 auto;
+  }
+
+  body :is(.employees-page, .users-page, .salaries-page, .loans-page, .vat-page, .expenses-page) .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+  }
+
+  body :is(.employees-page, .users-page, .salaries-page, .loans-page, .vat-page, .expenses-page) .stat-card {
+    min-width: 0;
+    padding: 13px;
+    gap: 9px;
+  }
+
+  body :is(.employees-page, .users-page, .salaries-page, .loans-page, .vat-page, .expenses-page) .stat-card strong {
+    overflow-wrap: anywhere;
+    font-size: 0.95rem;
+  }
+
+  body :is(.employee-filters, .toolbar-filters, .filters) {
+    align-items: stretch !important;
+    flex-direction: column !important;
+    width: 100%;
+  }
+
+  body :is(.employee-filters, .toolbar-filters, .filters) > * {
+    width: 100% !important;
+  }
+
+  body :is(.search, .search-wrapper) input,
+  body :is(.employee-filters, .toolbar-filters, .filters) .p-select {
+    width: 100% !important;
+  }
+
+  body .p-dialog {
+    max-width: calc(100vw - 24px) !important;
+    max-height: calc(100dvh - 32px);
+  }
+
+  body .p-dialog-content {
+    overflow-x: hidden;
+  }
+
+  .desktop-data-table { display: none !important; }
+  .mobile-record-list { display: grid; gap: 12px; padding: 12px; background: #f8fafc; }
+  .mobile-record-card { display: block; overflow: hidden; color: #18181b; background: #fff; border: 1px solid #e4e4e7; border-radius: 16px; box-shadow: 0 3px 12px rgba(24, 24, 27, .055); animation: mobile-card-enter 220ms ease both; }
+  .mobile-record-card:not(:focus-within) :is(.mobile-card-grid, .mobile-record-grid, .mobile-card-actions, .mobile-record-actions) { display: none; }
+  .mobile-record-card:focus-within { border-color: #d8b4fe; box-shadow: 0 6px 18px rgba(126, 34, 206, .1); outline: none; }
+  .mobile-record-card:focus-within :is(.mobile-card-grid, .mobile-record-grid) { display: grid; animation: mobile-card-reveal 180ms ease both; }
+  .mobile-record-card:focus-within :is(.mobile-card-actions, .mobile-record-actions) { display: flex; animation: mobile-card-reveal 180ms ease both; }
+  .mobile-record-card:nth-child(2) { animation-delay: 25ms; }.mobile-record-card:nth-child(3) { animation-delay: 50ms; }.mobile-record-card:nth-child(4) { animation-delay: 75ms; }
+  .mobile-card-link { cursor: pointer; transition: transform 150ms ease, border-color 150ms ease, box-shadow 150ms ease; }
+  .mobile-card-link:active { transform: scale(.985); border-color: #d8b4fe; box-shadow: 0 2px 8px rgba(126, 34, 206, .1); }
+  :is(.mobile-card-header, .mobile-record-header) { display: flex; min-width: 0; padding: 14px; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 1px solid #f4f4f5; }
+  :is(.mobile-card-header, .mobile-record-header) > div { display: flex; min-width: 0; flex-direction: column; gap: 3px; }
+  :is(.mobile-card-header, .mobile-record-header) > div.employee-cell,
+  :is(.mobile-card-header, .mobile-record-header) > div.user-cell,
+  :is(.mobile-card-header, .mobile-record-header) > div.person { flex-direction: row; align-items: center; }
+  :is(.mobile-card-header, .mobile-record-header) strong { overflow-wrap: anywhere; font-size: .9rem; }
+  :is(.mobile-card-header, .mobile-record-header) small { color: #71717a; font-size: .7rem; }
+  .mobile-record-avatar { display: grid !important; width: 38px; height: 38px; flex: 0 0 38px; place-items: center; color: #9810d5; background: #f5e6fb; border-radius: 11px; font-weight: 700; }
+  .mobile-record-header > div:nth-child(2) { flex: 1; }
+  :is(.mobile-card-grid, .mobile-record-grid) { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; background: #f4f4f5; }
+  :is(.mobile-card-grid, .mobile-record-grid) > div { display: flex; min-width: 0; min-height: 58px; padding: 10px 14px; flex-direction: column; justify-content: center; gap: 4px; background: #fff; }
+  :is(.mobile-card-grid, .mobile-record-grid) > div.wide { grid-column: 1 / -1; }
+  :is(.mobile-card-grid, .mobile-record-grid) small { color: #71717a; font-size: .65rem; font-weight: 600; text-transform: uppercase; letter-spacing: .035em; }
+  :is(.mobile-card-grid, .mobile-record-grid) strong { overflow-wrap: anywhere; font-size: .8rem; }
+  :is(.mobile-card-actions, .mobile-record-actions) { display: flex; min-height: 50px; padding: 7px 10px; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 5px; background: #fafafa; }
+  :is(.mobile-card-total, .mobile-record-total) { display: flex; min-height: 54px; padding: 10px 14px; align-items: center; justify-content: space-between; gap: 10px; background: #faf5ff; }
+  :is(.mobile-card-total, .mobile-record-total) span { color: #6b21a8; font-size: .7rem; font-weight: 700; text-transform: uppercase; }
+  :is(.mobile-card-total, .mobile-record-total) strong { margin-left: auto; font-size: .85rem; }
+  :is(.mobile-card-total, .mobile-record-total) > i { color: #9810d5; }
+  .mobile-record-positive { color: #15803d; }
+  .mobile-record-negative { color: #b91c1c; }
+  .mobile-record-empty { display: flex; min-height: 160px; align-items: center; justify-content: center; flex-direction: column; gap: 8px; color: #71717a; background: #fff; border: 1px dashed #d4d4d8; border-radius: 16px; }
+  .mobile-inline-actions { display: flex; align-items: center; gap: 2px; }.mobile-status { flex: 0 0 auto; padding: 5px 8px; color: #15803d; background: #dcfce7; border-radius: 999px; font-size: .66rem; font-weight: 700; }.mobile-status.inactive { color: #b91c1c; background: #fee2e2; }
+  .mobile-record-card .positive { color: #15803d; }.mobile-record-card .negative { color: #b91c1c; }.mobile-cards-empty { display: flex; min-height: 180px; align-items: center; justify-content: center; flex-direction: column; gap: 8px; color: #71717a; background: #fff; border: 1px dashed #d4d4d8; border-radius: 16px; }
+
+  @keyframes mobile-card-enter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes mobile-card-reveal { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* PrimeNG tables become stacked cards on phones. */
+  .mobile-card-table .p-datatable-table-container,
+  .mobile-card-table .p-datatable-wrapper {
+    overflow: visible !important;
+  }
+
+  .mobile-card-table table,
+  .mobile-card-table tbody {
+    display: block !important;
+    width: 100%;
+  }
+
+  .mobile-card-table thead {
+    display: none !important;
+  }
+
+  .p-datatable.mobile-card-table .p-datatable-thead,
+  .mobile-card-table .p-datatable-thead { display: none !important; }
+  .p-datatable.mobile-card-table .p-datatable-table,
+  .p-datatable.mobile-card-table .p-datatable-tbody,
+  .mobile-card-table .p-datatable-table,
+  .mobile-card-table .p-datatable-tbody { display: block !important; width: 100% !important; min-width: 0 !important; }
+
+  .mobile-card-table tbody {
+    padding: 10px;
+    background: #f8fafc;
+  }
+
+  .mobile-card-table tbody > tr {
+    display: grid !important;
+    width: 100%;
+    margin-bottom: 10px;
+    padding: 12px 14px;
+    background: #fff;
+    border: 1px solid #e4e4e7;
+    border-radius: 14px;
+    box-shadow: 0 2px 8px rgba(24, 24, 27, 0.045);
+  }
+
+  .mobile-card-table tbody > tr:last-child { margin-bottom: 0; }
+
+  .mobile-card-table tbody > tr > td {
+    display: flex !important;
+    min-width: 0 !important;
+    width: 100% !important;
+    padding: 8px 0 !important;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    overflow: visible !important;
+    white-space: normal !important;
+    text-align: right;
+    border: 0 !important;
+    border-bottom: 1px solid #f4f4f5 !important;
+  }
+
+  .mobile-card-table tbody > tr > td:last-child { border-bottom: 0 !important; }
+  .mobile-card-table tbody > tr > td::before { flex: 0 0 auto; color: #71717a; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.035em; }
+  .mobile-card-table tbody > tr > td > * { min-width: 0; }
+  .mobile-card-table .p-paginator { border-top: 1px solid #e4e4e7; }
+  .mobile-card-table tfoot { display: block; padding: 0 10px 10px; background: #f8fafc; }
+  .mobile-card-table tfoot tr { display: flex; padding: 12px 14px; justify-content: space-between; background: #fff; border: 1px solid #e4e4e7; border-radius: 12px; }
+  .mobile-card-table tfoot td { display: block; width: auto !important; padding: 0 !important; border: 0 !important; }
+
+  .employees-table td:nth-child(1)::before { content: 'Empleado'; }.employees-table td:nth-child(2)::before { content: 'Grupo'; }.employees-table td:nth-child(3)::before { content: 'Cargo'; }.employees-table td:nth-child(4)::before { content: 'Gremio'; }.employees-table td:nth-child(5)::before { content: 'Matrícula'; }.employees-table td:nth-child(6)::before { content: 'Teléfono'; }.employees-table td:nth-child(7)::before { content: 'Ingreso'; }.employees-table td:nth-child(8)::before { content: 'Acciones'; }
+  .users-table td:nth-child(1)::before { content: 'Nombre'; }.users-table td:nth-child(2)::before { content: 'Usuario'; }.users-table td:nth-child(3)::before { content: 'Email'; }.users-table td:nth-child(4)::before { content: 'Rol'; }.users-table td:nth-child(5)::before { content: 'Estado'; }.users-table td:nth-child(6)::before { content: 'Acceso'; }.users-table td:nth-child(7)::before { content: 'Acciones'; }
+  .salaries-table td:nth-child(1)::before { content: 'Empleado'; }.salaries-table td:nth-child(2)::before { content: 'Gremio'; }.salaries-table td:nth-child(3)::before { content: 'Recibo'; }.salaries-table td:nth-child(4)::before { content: 'Descuentos'; }.salaries-table td:nth-child(5)::before { content: 'Transferencia'; }.salaries-table td:nth-child(6)::before { content: 'Efectivo'; }.salaries-table td:nth-child(7)::before { content: 'Sueldo total'; }.salaries-table td:nth-child(8)::before { content: 'Detalle'; }
+  .loans-table td:nth-child(1)::before { content: 'Persona'; }.loans-table td:nth-child(2)::before { content: 'Tipo'; }.loans-table td:nth-child(3)::before { content: 'Fecha'; }.loans-table td:nth-child(4)::before { content: 'Total'; }.loans-table td:nth-child(5)::before { content: 'Cobrado'; }.loans-table td:nth-child(6)::before { content: 'Saldo'; }.loans-table td:nth-child(7)::before { content: 'Próxima cuota'; }.loans-table td:nth-child(8)::before { content: 'Estado'; }
+  .installments-table td:nth-child(1)::before { content: 'Cuota'; }.installments-table td:nth-child(2)::before { content: 'Período'; }.installments-table td:nth-child(3)::before { content: 'Previsto'; }.installments-table td:nth-child(4)::before { content: 'Pagado'; }.installments-table td:nth-child(5)::before { content: 'Estado'; }.installments-table td:nth-child(6)::before { content: 'Medio'; }.installments-table td:nth-child(7)::before { content: 'Acciones'; }
+  .vat-table td:nth-child(1)::before { content: 'Beneficiario'; }.vat-table td:nth-child(2)::before { content: 'Período'; }.vat-table td:nth-child(3)::before { content: 'Entrega'; }.vat-table td:nth-child(4)::before { content: 'Detalles'; }.vat-table td:nth-child(5)::before { content: 'Total'; }
+  .vat-detail-table td:nth-child(1)::before { content: 'N.º'; }.vat-detail-table td:nth-child(2)::before { content: 'Período'; }.vat-detail-table td:nth-child(3)::before { content: 'Observación'; }.vat-detail-table td:nth-child(4)::before { content: 'Importe'; }.vat-detail-table td:nth-child(5)::before { content: 'Acciones'; }
+  .expenses-table td:nth-child(1)::before { content: 'Descripción'; }.expenses-table td:nth-child(2)::before { content: 'Categoría'; }.expenses-table td:nth-child(3)::before { content: 'Período'; }.expenses-table td:nth-child(4)::before { content: 'Observación'; }.expenses-table td:nth-child(5)::before { content: 'Importe'; }.expenses-table td:nth-child(6)::before { content: 'Acciones'; }
+  .concept-table td:nth-child(1)::before { content: 'Descripción'; }.concept-table td:nth-child(2)::before { content: 'Importe'; }.concept-table td:nth-child(3)::before { content: 'Acciones'; }
+  .groups-table td:nth-child(1)::before, .positions-table td:nth-child(1)::before { content: 'Nombre'; }.groups-table td:nth-child(2)::before, .positions-table td:nth-child(2)::before { content: 'Asignados'; }.groups-table td:nth-child(3)::before, .positions-table td:nth-child(3)::before { content: 'Acciones'; }
+
+  .mobile-card-table td:has(.empty),
+  .mobile-card-table td:has(.table-empty) { display: block !important; text-align: center; }
+  .mobile-card-table td:has(.empty)::before,
+  .mobile-card-table td:has(.table-empty)::before { display: none; }
+}
+
+@media (max-width: 768px) {
+  .mobile-dock-menu.p-menu {
+    width: min(260px, calc(100vw - 24px));
+    margin-bottom: 8px;
+    padding: 8px;
+    border: 1px solid #e4e4e7;
+    border-radius: 16px;
+    box-shadow: 0 18px 45px rgba(24, 24, 27, 0.2);
+  }
+
+  .mobile-dock-menu .p-menu-item-link {
+    min-height: 46px;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 10px;
+  }
+
+  .mobile-dock-menu .p-menu-item-icon { color: #9810d5; }
+  .mobile-dock-menu .mobile-menu-logout .p-menu-item-link,
+  .mobile-dock-menu .mobile-menu-logout .p-menu-item-icon { color: #dc2626; }
+  .mobile-dock-menu .mobile-menu-logout .p-menu-item-link:hover { background: #fef2f2; }
+}
+
 /* =========================================
    AUTOFILL CHROME / EDGE / SAFARI
 

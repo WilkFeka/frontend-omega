@@ -3,6 +3,8 @@
   [life]="3000"
 />
 
+<p-confirmdialog />
+
 <section class="employees-page">
 
   <header class="page-header">
@@ -20,17 +22,17 @@
     </div>
 
 
-    <button
-      pButton
-      type="button"
-      class="primary-button"
-      (click)="openCreate()"
-    >
-      <i class="pi pi-plus"></i>
-      Nuevo empleado
-    </button>
-
   </header>
+
+  <p-tabs [value]="activeSection()" (valueChange)="activeSection.set($any($event))" [lazy]="true">
+    <p-tablist>
+      <p-tab value="employees"><i class="pi pi-users"></i>&nbsp; Empleados</p-tab>
+      <p-tab value="groups"><i class="pi pi-objects-column"></i>&nbsp; Grupos</p-tab>
+      <p-tab value="positions"><i class="pi pi-briefcase"></i>&nbsp; Cargos</p-tab>
+    </p-tablist>
+
+    <p-tabpanels>
+      <p-tabpanel value="employees">
 
 
   <!-- ====================== STATS ====================== -->
@@ -58,8 +60,8 @@
       </div>
 
       <div>
-        <span>Con matrícula</span>
-        <strong>{{ withMatricula() }}</strong>
+        <span>Activos</span>
+        <strong>{{ activeCount() }}</strong>
       </div>
 
     </article>
@@ -68,12 +70,12 @@
     <article class="stat-card">
 
       <div class="stat-icon phone">
-        <i class="pi pi-phone"></i>
+        <i class="pi pi-user-minus"></i>
       </div>
 
       <div>
-        <span>Con teléfono</span>
-        <strong>{{ withPhone() }}</strong>
+        <span>Dados de baja</span>
+        <strong>{{ inactiveCount() }}</strong>
       </div>
 
     </article>
@@ -82,12 +84,12 @@
     <article class="stat-card">
 
       <div class="stat-icon entry">
-        <i class="pi pi-calendar"></i>
+        <i class="pi pi-objects-column"></i>
       </div>
 
       <div>
-        <span>Con fecha de ingreso</span>
-        <strong>{{ withEntryDate() }}</strong>
+        <span>Grupos</span>
+        <strong>{{ groups().length }}</strong>
       </div>
 
     </article>
@@ -110,6 +112,20 @@
         </span>
       </div>
 
+      <input id="employees-filter-toggle" class="filter-toggle-input" type="checkbox" />
+      <label for="employees-filter-toggle" class="filter-toggle" title="Mostrar u ocultar filtros" aria-label="Mostrar u ocultar filtros"><i class="pi pi-filter"></i></label>
+
+      <button pButton type="button" class="primary-button" (click)="openCreate()">
+        <i class="pi pi-plus"></i>
+        Nuevo empleado
+      </button>
+
+
+      <div class="employee-filters">
+        <p-select [options]="groupOptions()" optionLabel="label" optionValue="value" [ngModel]="groupFilter()" (ngModelChange)="groupFilter.set($event)" [appendTo]="'body'" />
+        <p-select [options]="positionOptions()" optionLabel="label" optionValue="value" [ngModel]="positionFilter()" (ngModelChange)="positionFilter.set($event)" [appendTo]="'body'" />
+        <p-select [options]="unionOptions()" optionLabel="label" optionValue="value" [ngModel]="unionFilter()" (ngModelChange)="unionFilter.set($event)" [appendTo]="'body'" />
+        <p-select [options]="statusOptions" optionLabel="label" optionValue="value" [ngModel]="statusFilter()" (ngModelChange)="statusFilter.set($event)" [appendTo]="'body'" />
 
       <div class="search-wrapper">
 
@@ -129,28 +145,34 @@
 
       </div>
 
+        <button pButton type="button" [text]="true" [rounded]="true" severity="secondary" title="Restablecer filtros" aria-label="Restablecer filtros" (click)="resetFilters()"><i class="pi pi-filter-slash"></i></button>
+
+      </div>
+
     </div>
 
 
     <p-table
+      class="desktop-data-table"
       [value]="filteredEmployees()"
       [loading]="loading()"
       [paginator]="filteredEmployees().length > 10"
       [rows]="10"
       [rowsPerPageOptions]="[10, 25, 50]"
       [scrollable]="true"
-      styleClass="employees-table"
+      styleClass="mobile-card-table employees-table"
     >
 
       <ng-template #header>
 
         <tr>
-          <th>Empleado</th>
-          <th>Matrícula</th>
-          <th>Teléfono</th>
-          <th>Dirección</th>
-          <th>Fecha nac.</th>
-          <th>Fecha ingreso</th>
+          <th pSortableColumn="apellido">Empleado <p-sort-icon field="apellido" /></th>
+          <th pSortableColumn="group.nombre">Grupo <p-sort-icon field="group.nombre" /></th>
+          <th pSortableColumn="position.nombre">Cargo <p-sort-icon field="position.nombre" /></th>
+          <th pSortableColumn="gremio">Gremio <p-sort-icon field="gremio" /></th>
+          <th pSortableColumn="matricula">Matrícula <p-sort-icon field="matricula" /></th>
+          <th pSortableColumn="telefono">Teléfono <p-sort-icon field="telefono" /></th>
+          <th pSortableColumn="fecha_ingreso">Fecha ingreso <p-sort-icon field="fecha_ingreso" /></th>
 
           <th class="actions-column">
             Acciones
@@ -179,13 +201,22 @@
                 }}
               </div>
 
-              <span>
-                {{ getFullName(employee) }}
+              <span class="employee-name-status">
+                <strong>{{ getFullName(employee) }}</strong>
+                @if (employee.fecha_baja) {
+                  <small>Dado de baja el {{ formatDate(employee.fecha_baja) }}</small>
+                }
               </span>
 
             </div>
 
           </td>
+
+          <td>{{ employee.group?.nombre || '-' }}</td>
+
+          <td>{{ employee.position?.nombre || '-' }}</td>
+
+          <td>{{ employee.gremio || '-' }}</td>
 
 
           <td>
@@ -209,16 +240,6 @@
 
 
           <td>
-            {{ employee.direccion || '-' }}
-          </td>
-
-
-          <td>
-            {{ formatDate(employee.fecha_nacimiento) }}
-          </td>
-
-
-          <td>
             {{ formatDate(employee.fecha_ingreso) }}
           </td>
 
@@ -226,6 +247,19 @@
           <td>
 
             <div class="actions">
+
+              <button
+                type="button"
+                class="icon-button"
+                [class.success]="employee.fecha_baja"
+                [class.warning]="!employee.fecha_baja"
+                [attr.aria-label]="employee.fecha_baja ? 'Dar de alta' : 'Dar de baja'"
+                [title]="employee.fecha_baja ? 'Dar de alta' : 'Dar de baja'"
+                (click)="toggleEmployeeStatus(employee)"
+              >
+                <i [class]="employee.fecha_baja ? 'pi pi-user-plus' : 'pi pi-user-minus'"></i>
+              </button>
+
 
               <button
                 type="button"
@@ -261,7 +295,7 @@
 
         <tr>
 
-          <td colspan="7">
+          <td colspan="8">
 
             <div class="empty-state">
 
@@ -286,7 +320,29 @@
 
     </p-table>
 
+    <div class="mobile-record-list">
+      @for (employee of filteredEmployees(); track employee.id) {
+        <article class="mobile-record-card" tabindex="0">
+          <header class="mobile-card-header"><div class="employee-cell"><div class="avatar">{{ employee.nombre.charAt(0).toUpperCase() }}</div><span class="employee-name-status"><strong>{{ getFullName(employee) }}</strong>@if (employee.fecha_baja) { <small>Dado de baja</small> }</span></div><span class="mobile-status" [class.inactive]="employee.fecha_baja">{{ employee.fecha_baja ? 'Inactivo' : 'Activo' }}</span></header>
+          <div class="mobile-card-grid"><div><small>Grupo</small><strong>{{ employee.group?.nombre || '—' }}</strong></div><div><small>Cargo</small><strong>{{ employee.position?.nombre || '—' }}</strong></div><div><small>Gremio</small><strong>{{ employee.gremio || '—' }}</strong></div><div><small>Matrícula</small><strong>{{ employee.matricula || '—' }}</strong></div><div><small>Teléfono</small><strong>{{ employee.telefono || '—' }}</strong></div><div><small>Ingreso</small><strong>{{ formatDate(employee.fecha_ingreso) }}</strong></div></div>
+          <footer class="mobile-card-actions"><button type="button" class="icon-button" [class.success]="employee.fecha_baja" [class.warning]="!employee.fecha_baja" (click)="toggleEmployeeStatus(employee)"><i [class]="employee.fecha_baja ? 'pi pi-user-plus' : 'pi pi-user-minus'"></i></button><button type="button" class="icon-button" (click)="openEdit(employee)"><i class="pi pi-pencil"></i></button><button type="button" class="icon-button danger" (click)="askDelete(employee)"><i class="pi pi-trash"></i></button></footer>
+        </article>
+      } @empty { <div class="mobile-cards-empty"><i class="pi pi-users"></i><strong>No hay empleados</strong></div> }
+    </div>
+
   </section>
+
+      </p-tabpanel>
+
+      <p-tabpanel value="groups">
+        <app-grupos (groupsChanged)="loadGroups(); loadEmployees()" />
+      </p-tabpanel>
+
+      <p-tabpanel value="positions">
+        <app-cargos (positionsChanged)="loadPositions(); loadEmployees()" />
+      </p-tabpanel>
+    </p-tabpanels>
+  </p-tabs>
 
 </section>
 
@@ -389,6 +445,47 @@
       </div>
 
 
+      <div class="field">
+
+        <label for="gremio">
+          Gremio
+        </label>
+
+        <input
+          pInputText
+          id="gremio"
+          name="gremio"
+          [(ngModel)]="form.gremio"
+          placeholder="Ej: UOCRA"
+        />
+
+      </div>
+
+
+      <div class="field">
+        <label for="employee_group">Grupo</label>
+        <p-select
+          inputId="employee_group"
+          name="employee_group"
+          [options]="assignmentGroupOptions()"
+          optionLabel="label"
+          optionValue="value"
+          [ngModel]="form.group_id"
+          (ngModelChange)="form.group_id = $event"
+          [appendTo]="'body'"
+          placeholder="Seleccionar grupo"
+        />
+      </div>
+
+      <div class="field">
+        <label for="employee_position">Cargo</label>
+        <p-select inputId="employee_position" name="employee_position"
+          [options]="assignmentPositionOptions()" optionLabel="label" optionValue="value"
+          [ngModel]="form.position_id" (ngModelChange)="form.position_id = $event"
+          [appendTo]="'body'" placeholder="Seleccionar cargo" />
+      </div>
+
+
       <div class="field full-width">
 
         <label for="direccion">
@@ -413,13 +510,15 @@
           <span>*</span>
         </label>
 
-        <input
-          pInputText
-          id="fecha_nacimiento"
+        <p-datepicker
+          inputId="fecha_nacimiento"
           name="fecha_nacimiento"
-          type="date"
-          [(ngModel)]="form.fecha_nacimiento"
-          required
+          dataType="string"
+          dateFormat="yy-mm-dd"
+          [showIcon]="true"
+          [ngModel]="form.fecha_nacimiento"
+          (ngModelChange)="form.fecha_nacimiento = $event"
+          [appendTo]="'body'"
         />
 
       </div>
@@ -431,12 +530,16 @@
           Fecha de ingreso
         </label>
 
-        <input
-          pInputText
-          id="fecha_ingreso"
+        <p-datepicker
+          inputId="fecha_ingreso"
           name="fecha_ingreso"
-          type="date"
-          [(ngModel)]="form.fecha_ingreso"
+          dataType="string"
+          dateFormat="yy-mm-dd"
+          [showIcon]="true"
+          [showClear]="true"
+          [ngModel]="form.fecha_ingreso"
+          (ngModelChange)="form.fecha_ingreso = $event || ''"
+          [appendTo]="'body'"
         />
 
       </div>
@@ -519,7 +622,8 @@
       </p>
 
       <p>
-        Esta acción no se puede deshacer.
+        También se eliminarán definitivamente todas sus liquidaciones,
+        descuentos y adicionales. Esta acción no se puede deshacer.
       </p>
 
     </div>

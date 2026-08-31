@@ -12,6 +12,7 @@ import {
 
 import { firstValueFrom } from 'rxjs';
 import { MenuItem } from 'primeng/api';
+import { Menu } from 'primeng/menu';
 
 import { Auth } from '../../services/auth';
 
@@ -20,7 +21,8 @@ import { Auth } from '../../services/auth';
   selector: 'app-navbar',
   imports: [
     RouterLink,
-    RouterLinkActive
+    RouterLinkActive,
+    Menu
   ],
   templateUrl: './navbar.html',
   styleUrl: './navbar.scss'
@@ -54,6 +56,43 @@ export class Navbar {
       label: 'Empleados',
       icon: 'pi pi-id-card',
       routerLink: '/empleados'
+    },
+    {
+      label: 'Sueldos',
+      icon: 'pi pi-wallet',
+      routerLink: '/sueldos'
+    },
+    {
+      label: 'Préstamos',
+      icon: 'pi pi-money-bill',
+      routerLink: '/prestamos'
+    },
+    {
+      label: 'Reintegro IVA',
+      icon: 'pi pi-percentage',
+      routerLink: '/reintegro-iva'
+    },
+    {
+      label: 'Gastos',
+      icon: 'pi pi-credit-card',
+      routerLink: '/gastos'
+    }
+  ];
+
+  readonly mobileMoreItems: MenuItem[] = [
+    ...this.items.slice(4).map(item => ({
+      ...item,
+      command: () => {
+        void this.router.navigateByUrl(String(item.routerLink));
+        this.collapseNavbar();
+      }
+    })),
+    { separator: true },
+    {
+      label: 'Salir',
+      icon: 'pi pi-sign-out',
+      styleClass: 'mobile-menu-logout',
+      command: () => void this.logout()
     }
   ];
 

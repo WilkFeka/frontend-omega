@@ -1,0 +1,26 @@
+<p-toast position="bottom-right" />
+<section class="groups-card">
+  <div class="table-toolbar">
+    <div><h2>Cargos</h2><span>{{ filtered().length }} resultados</span></div>
+    <button pButton type="button" class="primary-button" (click)="openCreate()"><i class="pi pi-plus"></i> Nuevo cargo</button>
+    <input id="positions-filter-toggle" class="filter-toggle-input" type="checkbox" />
+    <label for="positions-filter-toggle" class="filter-toggle" title="Mostrar u ocultar filtros" aria-label="Mostrar u ocultar filtros"><i class="pi pi-filter"></i></label>
+    <div class="filters"><span class="search"><i class="pi pi-search"></i><input pInputText type="search" placeholder="Buscar cargo..." [ngModel]="search()" (ngModelChange)="search.set($event)" /></span></div>
+  </div>
+  <p-table class="desktop-data-table" [value]="filtered()" [loading]="loading()" [paginator]="filtered().length > 10" [rows]="10" styleClass="positions-table">
+    <ng-template #header><tr><th pSortableColumn="nombre">Nombre <p-sort-icon field="nombre" /></th><th pSortableColumn="employee_count">Empleados asignados <p-sort-icon field="employee_count" /></th><th class="actions-column">Acciones</th></tr></ng-template>
+    <ng-template #body let-item><tr><td><strong>{{ item.nombre }}</strong></td><td>{{ item.employee_count }}</td><td class="row-actions"><button pButton type="button" severity="secondary" [text]="true" [rounded]="true" (click)="openEdit(item)"><i class="pi pi-pencil"></i></button><button pButton type="button" severity="danger" [text]="true" [rounded]="true" (click)="askDelete(item)"><i class="pi pi-trash"></i></button></td></tr></ng-template>
+    <ng-template #emptymessage><tr><td colspan="3"><div class="empty"><i class="pi pi-briefcase"></i><strong>No hay cargos</strong></div></td></tr></ng-template>
+  </p-table>
+  <div class="mobile-record-list">
+    @for (item of filtered(); track item.id) {
+      <article class="mobile-record-card" tabindex="0">
+        <div class="mobile-record-header"><div class="mobile-record-avatar"><i class="pi pi-briefcase"></i></div><div><small>Cargo</small><strong>{{ item.nombre }}</strong></div></div>
+        <div class="mobile-record-grid"><div><small>Empleados asignados</small><strong>{{ item.employee_count }}</strong></div></div>
+        <div class="mobile-record-actions"><button pButton type="button" severity="secondary" [outlined]="true" size="small" (click)="openEdit(item)"><i class="pi pi-pencil"></i> Editar</button><button pButton type="button" severity="danger" [text]="true" size="small" (click)="askDelete(item)"><i class="pi pi-trash"></i> Eliminar</button></div>
+      </article>
+    } @empty { <div class="mobile-record-empty"><i class="pi pi-briefcase"></i><strong>No hay cargos</strong></div> }
+  </div>
+</section>
+<p-dialog [visible]="dialogVisible()" (visibleChange)="dialogVisible.set($event)" [modal]="true" [draggable]="false" [resizable]="false" [header]="editingId() === null ? 'Nuevo cargo' : 'Editar cargo'" [style]="{width:'min(460px, calc(100vw - 32px))'}"><form (ngSubmit)="save()"><label for="position_name">Nombre</label><input pInputText id="position_name" name="position_name" [(ngModel)]="name" /><div class="dialog-actions"><button pButton type="button" severity="secondary" [outlined]="true" (click)="dialogVisible.set(false)">Cancelar</button><button pButton type="submit" [loading]="saving()">Guardar</button></div></form></p-dialog>
+<p-dialog [visible]="confirmVisible()" (visibleChange)="confirmVisible.set($event)" [modal]="true" header="Eliminar cargo" [style]="{width:'min(460px, calc(100vw - 32px))'}"><p>Los empleados asignados quedarán sin cargo.</p><div class="dialog-actions"><button pButton type="button" severity="secondary" [outlined]="true" (click)="confirmVisible.set(false)">Cancelar</button><button pButton type="button" severity="danger" [loading]="saving()" (click)="delete()">Eliminar</button></div></p-dialog>

@@ -1,0 +1,693 @@
+<p-toast position="bottom-right" />
+
+<section class="loans-page">
+  <header class="page-header">
+    <div>
+      <span class="eyebrow">Finanzas</span>
+      <h1>Préstamos</h1>
+      <p>Seguimiento del dinero prestado a empleados y otras personas.</p>
+    </div>
+    <button pButton type="button" (click)="openCreate()">
+      <i class="pi pi-plus"></i> Nuevo préstamo
+    </button>
+  </header>
+
+  <section class="stats-grid">
+    <article class="stat-card">
+      <span class="stat-icon purple"><i class="pi pi-wallet"></i></span>
+      <div>
+        <small>Total prestado</small
+        ><strong>{{ formatCurrency(filteredKpis().total_lent) }}</strong>
+      </div>
+    </article>
+    <article class="stat-card featured">
+      <span class="stat-icon violet"><i class="pi pi-chart-line"></i></span>
+      <div>
+        <small>Saldo pendiente</small
+        ><strong>{{ formatCurrency(filteredKpis().outstanding_balance) }}</strong>
+      </div>
+    </article>
+    <article class="stat-card">
+      <span class="stat-icon green"><i class="pi pi-check-circle"></i></span>
+      <div>
+        <small>Cobrado este mes</small
+        ><strong>{{ formatCurrency(filteredKpis().collected_this_month) }}</strong>
+      </div>
+    </article>
+    <article class="stat-card">
+      <span class="stat-icon orange"><i class="pi pi-clock"></i></span>
+      <div>
+        <small>Cuotas vencidas</small><strong>{{ filteredKpis().overdue_installments }}</strong>
+      </div>
+    </article>
+    <article class="stat-card">
+      <span class="stat-icon blue"><i class="pi pi-users"></i></span>
+      <div>
+        <small>Préstamos activos</small><strong>{{ filteredKpis().active_loans }}</strong>
+      </div>
+    </article>
+  </section>
+
+  <section class="table-card">
+    <div class="table-toolbar">
+      <div>
+        <h2>Préstamos registrados</h2>
+        <span>{{ filteredLoans().length }} resultados</span>
+      </div>
+      <input id="loans-filter-toggle" class="filter-toggle-input" type="checkbox" />
+      <label for="loans-filter-toggle" class="filter-toggle" title="Mostrar u ocultar filtros" aria-label="Mostrar u ocultar filtros"><i class="pi pi-filter"></i></label>
+      <div class="filters">
+        <p-select
+          [options]="typeFilterOptions"
+          optionLabel="label"
+          optionValue="value"
+          [ngModel]="typeFilter()"
+          (ngModelChange)="typeFilter.set($event)"
+          appendTo="body"
+        />
+        <p-select
+          [options]="statusOptions"
+          optionLabel="label"
+          optionValue="value"
+          [ngModel]="statusFilter()"
+          (ngModelChange)="statusFilter.set($event)"
+          appendTo="body"
+        />
+        <span class="search"
+          ><i class="pi pi-search"></i
+          ><input
+            pInputText
+            type="search"
+            placeholder="Buscar persona..."
+            [ngModel]="search()"
+            (ngModelChange)="search.set($event)"
+        /></span>
+        <button
+          pButton
+          type="button"
+          [text]="true"
+          [rounded]="true"
+          severity="secondary"
+          title="Restablecer filtros"
+          aria-label="Restablecer filtros"
+          (click)="resetFilters()"
+        >
+          <i class="pi pi-filter-slash"></i>
+        </button>
+      </div>
+    </div>
+
+    <p-table
+      class="desktop-data-table"
+      [value]="filteredLoans()"
+      [loading]="loading()"
+      [paginator]="filteredLoans().length > 10"
+      [rows]="10"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      [scrollable]="true"
+      styleClass="loans-table"
+    >
+      <ng-template #header
+        ><tr>
+          <th pSortableColumn="person_name">Persona <p-sort-icon field="person_name" /></th>
+          <th pSortableColumn="person_type">Tipo <p-sort-icon field="person_type" /></th>
+          <th pSortableColumn="delivery_date">Fecha <p-sort-icon field="delivery_date" /></th>
+          <th pSortableColumn="total_amount">Total <p-sort-icon field="total_amount" /></th>
+          <th pSortableColumn="paid_amount">Cobrado <p-sort-icon field="paid_amount" /></th>
+          <th pSortableColumn="balance">Saldo <p-sort-icon field="balance" /></th>
+          <th>Próxima cuota</th>
+          <th pSortableColumn="status">Estado <p-sort-icon field="status" /></th>
+          <th></th></tr
+      ></ng-template>
+      <ng-template #body let-loan
+        ><tr class="clickable" (click)="openDetail(loan)">
+          <td>
+            <div class="person">
+              <span>{{ loan.person_name.charAt(0) }}</span
+              ><strong>{{ loan.person_name }}</strong>
+            </div>
+          </td>
+          <td>{{ loan.person_type === 'EMPLEADO' ? 'Empleado' : 'Externo' }}</td>
+          <td>{{ loan.delivery_date | date: 'dd/MM/yyyy' }}</td>
+          <td>
+            <strong>{{ formatCurrency(loan.total_amount) }}</strong>
+          </td>
+          <td class="paid">{{ formatCurrency(loan.paid_amount) }}</td>
+          <td>
+            <strong>{{ formatCurrency(loan.balance) }}</strong>
+          </td>
+          <td>
+            @if (loan.next_installment) {
+              <span>{{ formatPeriod(loan.next_installment.period) }}</span
+              ><small>{{ formatCurrency(loan.next_installment.expected_amount) }}</small>
+            } @else {
+              —
+            }
+          </td>
+          <td>
+            <p-tag [value]="statusLabel(loan.status)" [severity]="statusSeverity(loan.status)" />
+          </td>
+          <td><i class="pi pi-chevron-right row-arrow"></i></td></tr
+      ></ng-template>
+      <ng-template #emptymessage
+        ><tr>
+          <td colspan="9">
+            <div class="empty">
+              <i class="pi pi-money-bill"></i><strong>No hay préstamos</strong
+              ><span>No encontramos préstamos con los filtros seleccionados.</span>
+            </div>
+          </td>
+        </tr></ng-template
+      >
+    </p-table>
+    <div class="mobile-record-list">
+      @for (loan of filteredLoans(); track loan.id) {
+        <article class="mobile-record-card mobile-card-link" (click)="openDetail(loan)">
+          <header class="mobile-card-header">
+            <div class="person">
+              <span>{{ loan.person_name.charAt(0) }}</span>
+              <div>
+                <strong>{{ loan.person_name }}</strong
+                ><small>{{ loan.person_type === 'EMPLEADO' ? 'Empleado' : 'Externo' }}</small>
+              </div>
+            </div>
+            <p-tag [value]="statusLabel(loan.status)" [severity]="statusSeverity(loan.status)" />
+          </header>
+          <div class="mobile-card-grid">
+            <div>
+              <small>Total</small><strong>{{ formatCurrency(loan.total_amount) }}</strong>
+            </div>
+            <div>
+              <small>Saldo</small><strong>{{ formatCurrency(loan.balance) }}</strong>
+            </div>
+            <div>
+              <small>Cobrado</small
+              ><strong class="positive">{{ formatCurrency(loan.paid_amount) }}</strong>
+            </div>
+            <div>
+              <small>Fecha</small><strong>{{ loan.delivery_date | date: 'dd/MM/yyyy' }}</strong>
+            </div>
+          </div>
+          <footer class="mobile-card-total">
+            <span>Próxima cuota</span
+            ><strong>
+              @if (loan.next_installment) {
+                {{ formatPeriod(loan.next_installment.period) }} ·
+                {{ formatCurrency(loan.next_installment.expected_amount) }}
+              } @else {
+                —
+              }</strong
+            ><i class="pi pi-chevron-right"></i>
+          </footer>
+        </article>
+      } @empty {
+        <div class="mobile-cards-empty">
+          <i class="pi pi-money-bill"></i><strong>No hay préstamos</strong>
+        </div>
+      }
+    </div>
+  </section>
+</section>
+
+<p-dialog
+  [visible]="createVisible()"
+  (visibleChange)="createVisible.set($event)"
+  header="Nuevo préstamo"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: 'min(760px, calc(100vw - 32px))' }"
+>
+  <form class="loan-form" (ngSubmit)="createLoan()">
+    <div class="field">
+      <label>Tipo de persona *</label
+      ><p-select
+        [options]="personTypeOptions"
+        optionLabel="label"
+        optionValue="value"
+        [(ngModel)]="form.person_type"
+        name="person_type"
+        appendTo="body"
+      />
+    </div>
+    @if (form.person_type === 'EMPLEADO') {
+      <div class="field">
+        <label>Empleado *</label
+        ><p-select
+          [options]="employeeOptions()"
+          optionLabel="label"
+          optionValue="value"
+          [(ngModel)]="form.employee_id"
+          name="employee_id"
+          [filter]="true"
+          filterBy="label"
+          placeholder="Seleccionar empleado"
+          appendTo="body"
+        />
+      </div>
+    } @else {
+      <div class="field">
+        <label>Nombre completo *</label
+        ><input pInputText [(ngModel)]="form.external_name" name="external_name" />
+      </div>
+      <div class="field">
+        <label>Documento</label
+        ><input pInputText [(ngModel)]="form.external_document" name="external_document" />
+      </div>
+    }
+    <div class="field">
+      <label>Monto total *</label>
+      <div class="money-input">
+        <span>$</span
+        ><input
+          pInputText
+          name="total_amount"
+          type="text"
+          inputmode="decimal"
+          [ngModel]="formatMoneyInput(form.total_amount)"
+          (ngModelChange)="updateLoanAmount($event)"
+        />
+      </div>
+    </div>
+    <div class="field">
+      <label>Cantidad de cuotas *</label
+      ><p-inputnumber
+        [(ngModel)]="form.installment_count"
+        name="installment_count"
+        [min]="1"
+        [max]="240"
+        [useGrouping]="false"
+      />
+    </div>
+    <div class="field">
+      <label>Fecha de entrega *</label
+      ><p-datepicker
+        [(ngModel)]="form.delivery_date"
+        name="delivery_date"
+        dateFormat="dd/mm/yy"
+        [showIcon]="true"
+        appendTo="body"
+      />
+    </div>
+    <div class="field">
+      <label>Primera cuota *</label
+      ><p-datepicker
+        [(ngModel)]="form.first_installment_period"
+        name="first_installment_period"
+        view="month"
+        dateFormat="mm/yy"
+        [showIcon]="true"
+        appendTo="body"
+      />
+    </div>
+    <div class="field">
+      <label>Medio de entrega</label
+      ><p-select
+        [options]="deliveryOptions"
+        optionLabel="label"
+        optionValue="value"
+        [(ngModel)]="form.delivery_method"
+        name="delivery_method"
+        appendTo="body"
+      />
+    </div>
+    <div class="field full">
+      <label>Observaciones</label
+      ><textarea pTextarea [(ngModel)]="form.notes" name="notes" rows="3"></textarea>
+    </div>
+    <p class="form-hint full">
+      <i class="pi pi-info-circle"></i> Las cuotas se distribuirán automáticamente y después podrán
+      modificarse una por una.
+    </p>
+    <div class="dialog-actions full">
+      <button
+        pButton
+        type="button"
+        severity="secondary"
+        [outlined]="true"
+        (click)="createVisible.set(false)"
+      >
+        Cancelar</button
+      ><button pButton type="submit" [loading]="saving()">Crear préstamo</button>
+    </div>
+  </form>
+</p-dialog>
+
+<p-dialog
+  [visible]="detailVisible()"
+  (visibleChange)="detailVisible.set($event)"
+  header="Detalle del préstamo"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: 'min(980px, calc(100vw - 32px))' }"
+>
+  @if (selectedLoan(); as loan) {
+    <div class="detail-summary">
+      <div>
+        <small>Persona</small><strong>{{ loan.person_name }}</strong>
+      </div>
+      <div>
+        <small>Total</small><strong>{{ formatCurrency(loan.total_amount) }}</strong>
+      </div>
+      <div>
+        <small>Cobrado</small><strong class="paid">{{ formatCurrency(loan.paid_amount) }}</strong>
+      </div>
+      <div>
+        <small>Saldo</small><strong>{{ formatCurrency(loan.balance) }}</strong>
+      </div>
+      <div>
+        <small>Estado</small
+        ><p-tag [value]="statusLabel(loan.status)" [severity]="statusSeverity(loan.status)" />
+      </div>
+    </div>
+    <div class="detail-meta">
+      <span
+        ><i class="pi pi-calendar"></i> Entregado el
+        {{ loan.delivery_date | date: 'dd/MM/yyyy' }}</span
+      ><span><i class="pi pi-credit-card"></i> {{ loan.delivery_method }}</span
+      ><span><i class="pi pi-list"></i> {{ loan.installment_count }} cuotas</span>
+    </div>
+    @if (loan.notes) {
+      <p class="notes">{{ loan.notes }}</p>
+    }
+    <div class="installments-heading">
+      <h3>Cronograma de cuotas</h3>
+      <button
+        pButton
+        type="button"
+        size="small"
+        [outlined]="true"
+        (click)="openCreateInstallment()"
+      >
+        <i class="pi pi-plus"></i> Agregar cuota
+      </button>
+    </div>
+    <p-table
+      class="desktop-data-table"
+      [value]="loan.installments ?? []"
+      [scrollable]="true"
+      scrollHeight="360px"
+      styleClass="installments-table"
+    >
+      <ng-template #header
+        ><tr>
+          <th pSortableColumn="number"># <p-sort-icon field="number" /></th>
+          <th pSortableColumn="period">Período <p-sort-icon field="period" /></th>
+          <th pSortableColumn="expected_amount">
+            Previsto <p-sort-icon field="expected_amount" />
+          </th>
+          <th pSortableColumn="paid_amount">Pagado <p-sort-icon field="paid_amount" /></th>
+          <th pSortableColumn="status">Estado <p-sort-icon field="status" /></th>
+          <th>Medio</th>
+          <th></th></tr
+      ></ng-template>
+      <ng-template #body let-item
+        ><tr>
+          <td>{{ item.number }}</td>
+          <td>{{ formatPeriod(item.period) }}</td>
+          <td>{{ formatCurrency(item.expected_amount) }}</td>
+          <td>{{ formatCurrency(item.paid_amount) }}</td>
+          <td>
+            <p-tag [value]="statusLabel(item.status)" [severity]="statusSeverity(item.status)" />
+          </td>
+          <td>{{ item.payment_method || '—' }}</td>
+          <td>
+            <div class="installment-actions">
+              <button
+                pButton
+                type="button"
+                [text]="true"
+                [rounded]="true"
+                title="Editar cuota"
+                aria-label="Editar cuota"
+                (click)="openInstallment(item)"
+              >
+                <i class="pi pi-pencil"></i></button
+              ><button
+                pButton
+                type="button"
+                [text]="true"
+                [rounded]="true"
+                severity="danger"
+                title="Eliminar cuota"
+                aria-label="Eliminar cuota"
+                (click)="askDeleteInstallment(item)"
+              >
+                <i class="pi pi-trash"></i>
+              </button>
+            </div>
+          </td></tr
+      ></ng-template>
+    </p-table>
+    <div class="mobile-record-list">
+      @for (item of loan.installments ?? []; track item.id) {
+        <article class="mobile-record-card" tabindex="0">
+          <div class="mobile-record-header">
+            <div class="mobile-record-avatar">{{ item.number }}</div>
+            <div>
+              <small>Cuota</small><strong>{{ formatPeriod(item.period) }}</strong>
+            </div>
+            <p-tag [value]="statusLabel(item.status)" [severity]="statusSeverity(item.status)" />
+          </div>
+          <div class="mobile-record-grid">
+            <div>
+              <small>Previsto</small><strong>{{ formatCurrency(item.expected_amount) }}</strong>
+            </div>
+            <div>
+              <small>Pagado</small><strong>{{ formatCurrency(item.paid_amount) }}</strong>
+            </div>
+            <div>
+              <small>Medio</small><strong>{{ item.payment_method || '—' }}</strong>
+            </div>
+          </div>
+          <div class="mobile-record-actions">
+            <button
+              pButton
+              type="button"
+              severity="secondary"
+              [outlined]="true"
+              size="small"
+              (click)="openInstallment(item)"
+            >
+              <i class="pi pi-pencil"></i> Editar</button
+            ><button
+              pButton
+              type="button"
+              severity="danger"
+              [text]="true"
+              size="small"
+              (click)="askDeleteInstallment(item)"
+            >
+              <i class="pi pi-trash"></i> Eliminar
+            </button>
+          </div>
+        </article>
+      } @empty {
+        <div class="mobile-record-empty">
+          <i class="pi pi-calendar-times"></i><strong>No hay cuotas</strong>
+        </div>
+      }
+    </div>
+    <div class="dialog-actions">
+      <button
+        pButton
+        type="button"
+        severity="danger"
+        [text]="true"
+        (click)="confirmVisible.set(true)"
+      >
+        <i class="pi pi-trash"></i> Eliminar</button
+      ><span class="spacer"></span
+      ><button
+        pButton
+        type="button"
+        severity="secondary"
+        [outlined]="true"
+        [loading]="saving()"
+        (click)="toggleCancelled()"
+      >
+        {{ loan.status === 'ANULADO' ? 'Reactivar' : 'Anular' }}</button
+      ><button pButton type="button" (click)="detailVisible.set(false)">Cerrar</button>
+    </div>
+  }
+</p-dialog>
+
+<p-dialog
+  [visible]="installmentVisible()"
+  (visibleChange)="installmentVisible.set($event)"
+  [header]="creatingInstallment() ? 'Agregar cuota' : 'Registrar cuota'"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [focusOnShow]="false"
+  [style]="{ width: 'min(560px, calc(100vw - 32px))' }"
+>
+  <form class="installment-form" (ngSubmit)="saveInstallment()">
+    <div class="field">
+      <label>Período *</label
+      ><p-datepicker
+        [(ngModel)]="installmentForm.period"
+        name="installment_period"
+        view="month"
+        dateFormat="mm/yy"
+        [showIcon]="true"
+        appendTo="body"
+      />
+    </div>
+    <div class="field">
+      <label>Importe previsto</label>
+      <div class="money-input">
+        <span>$</span
+        ><input
+          pInputText
+          name="expected_amount"
+          type="text"
+          inputmode="decimal"
+          [ngModel]="formatMoneyInput(installmentForm.expected_amount)"
+          (ngModelChange)="updateInstallmentAmount('expected_amount', $event)"
+        />
+      </div>
+    </div>
+    @if (!creatingInstallment()) {
+      <div class="field">
+        <label>Importe pagado</label>
+        <div class="money-input">
+          <span>$</span
+          ><input
+            pInputText
+            name="paid_amount"
+            type="text"
+            inputmode="decimal"
+            [ngModel]="formatMoneyInput(installmentForm.paid_amount)"
+            (ngModelChange)="updateInstallmentAmount('paid_amount', $event)"
+          />
+        </div>
+      </div>
+      <div class="field">
+        <label>Estado</label
+        ><p-select
+          [options]="installmentStatusOptions"
+          optionLabel="label"
+          optionValue="value"
+          [ngModel]="installmentForm.status"
+          (ngModelChange)="onInstallmentStatusChange($event)"
+          name="status"
+          appendTo="body"
+        />
+      </div>
+      <div class="field">
+        <label>Fecha de pago</label
+        ><p-datepicker
+          [(ngModel)]="installmentForm.payment_date"
+          name="payment_date"
+          dateFormat="dd/mm/yy"
+          [showIcon]="true"
+          appendTo="body"
+        />
+      </div>
+      <div class="field full">
+        <label>Medio de cobro</label
+        ><p-select
+          [options]="paymentOptions"
+          optionLabel="label"
+          optionValue="value"
+          [(ngModel)]="installmentForm.payment_method"
+          name="payment_method"
+          placeholder="Seleccionar"
+          appendTo="body"
+        />
+      </div>
+    }
+    <div class="field full">
+      <label>Observación</label
+      ><textarea
+        pTextarea
+        [(ngModel)]="installmentForm.notes"
+        name="installment_notes"
+        rows="3"
+      ></textarea>
+    </div>
+    <div class="dialog-actions full">
+      <button
+        pButton
+        type="button"
+        severity="secondary"
+        [outlined]="true"
+        (click)="installmentVisible.set(false)"
+      >
+        Cancelar</button
+      ><button pButton type="submit" [loading]="saving()">
+        {{ creatingInstallment() ? 'Agregar cuota' : 'Guardar cuota' }}
+      </button>
+    </div>
+  </form>
+</p-dialog>
+
+<p-dialog
+  [visible]="installmentConfirmVisible()"
+  (visibleChange)="installmentConfirmVisible.set($event)"
+  header="Eliminar cuota"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: 'min(460px, calc(100vw - 32px))' }"
+>
+  <div class="confirm">
+    <i class="pi pi-exclamation-triangle"></i>
+    <div>
+      <strong>¿Eliminar la cuota {{ installmentToDelete()?.number }}?</strong>
+      <p>Se actualizarán automáticamente la cantidad de cuotas y el total del préstamo.</p>
+    </div>
+  </div>
+  <div class="dialog-actions">
+    <button
+      pButton
+      type="button"
+      severity="secondary"
+      [outlined]="true"
+      (click)="installmentConfirmVisible.set(false)"
+    >
+      Cancelar</button
+    ><button
+      pButton
+      type="button"
+      severity="danger"
+      [loading]="saving()"
+      (click)="deleteInstallment()"
+    >
+      Eliminar cuota
+    </button>
+  </div>
+</p-dialog>
+
+<p-dialog
+  [visible]="confirmVisible()"
+  (visibleChange)="confirmVisible.set($event)"
+  header="Eliminar préstamo"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: 'min(460px, calc(100vw - 32px))' }"
+>
+  <div class="confirm">
+    <i class="pi pi-exclamation-triangle"></i>
+    <div>
+      <strong>¿Eliminar definitivamente este préstamo?</strong>
+      <p>También se eliminarán todas sus cuotas y pagos. Esta acción no se puede deshacer.</p>
+    </div>
+  </div>
+  <div class="dialog-actions">
+    <button
+      pButton
+      type="button"
+      severity="secondary"
+      [outlined]="true"
+      (click)="confirmVisible.set(false)"
+    >
+      Cancelar</button
+    ><button pButton type="button" severity="danger" [loading]="saving()" (click)="deleteLoan()">
+      Eliminar
+    </button>
+  </div>
+</p-dialog>

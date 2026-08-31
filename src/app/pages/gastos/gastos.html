@@ -1,0 +1,583 @@
+<p-toast position="bottom-right" />
+<section class="expenses-page">
+  <header class="page-header">
+    <div>
+      <span class="eyebrow">Finanzas</span>
+      <h1>Gastos</h1>
+      <p>
+        Gastos correspondientes a <strong>{{ periodLabel() }}</strong
+        >.
+      </p>
+    </div>
+    <div class="header-actions">
+      <div class="period-selector">
+        <label for="expense_period">Período</label>
+        <div class="period-navigation">
+          <button type="button" aria-label="Mes anterior" (click)="movePeriod(-1)">
+            <i class="pi pi-chevron-left"></i></button
+          ><p-datepicker
+            inputId="expense_period"
+            view="month"
+            dateFormat="mm/yy"
+            [showIcon]="true"
+            [readonlyInput]="true"
+            [ngModel]="periodDate()"
+            (ngModelChange)="changePeriod($event)"
+          /><button type="button" aria-label="Mes siguiente" (click)="movePeriod(1)">
+            <i class="pi pi-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+      <div class="header-buttons">
+        <button
+          pButton
+          type="button"
+          severity="secondary"
+          [outlined]="true"
+          (click)="openCopyPrevious()"
+        >
+          <i class="pi pi-copy"></i> Copiar mes anterior
+        </button>
+        <button pButton type="button" (click)="openCreate()">
+          <i class="pi pi-plus"></i> Nuevo gasto
+        </button>
+      </div>
+    </div>
+  </header>
+  <section class="stats-grid">
+    <article class="stat-card taxes">
+      <span class="stat-icon"><i class="pi pi-file"></i></span>
+      <div>
+        <small>Impuestos</small><strong>{{ formatCurrency(filteredTotals().impuestos) }}</strong>
+      </div>
+    </article>
+    <article class="stat-card services">
+      <span class="stat-icon"><i class="pi pi-bolt"></i></span>
+      <div>
+        <small>Servicios</small><strong>{{ formatCurrency(filteredTotals().servicios) }}</strong>
+      </div>
+    </article>
+    <article class="stat-card misc">
+      <span class="stat-icon"><i class="pi pi-box"></i></span>
+      <div>
+        <small>Varios</small><strong>{{ formatCurrency(filteredTotals().varios) }}</strong>
+      </div>
+    </article>
+    <article class="stat-card transfer">
+      <span class="stat-icon"><i class="pi pi-building-columns"></i></span>
+      <div>
+        <small>Transferencia</small
+        ><strong>{{ formatCurrency(filteredTotals().transferencia) }}</strong>
+      </div>
+    </article>
+    <article class="stat-card cash">
+      <span class="stat-icon"><i class="pi pi-money-bill"></i></span>
+      <div>
+        <small>Efectivo</small><strong>{{ formatCurrency(filteredTotals().efectivo) }}</strong>
+      </div>
+    </article>
+    <article class="stat-card total">
+      <span class="stat-icon"><i class="pi pi-wallet"></i></span>
+      <div>
+        <small>Total gastos</small><strong>{{ formatCurrency(filteredTotals().total) }}</strong>
+      </div>
+    </article>
+  </section>
+  <section class="table-card">
+    <div class="table-toolbar">
+      <div>
+        <h2>Gastos registrados</h2>
+        <span>{{ filteredRows().length }} resultados</span>
+      </div>
+      <input id="expenses-filter-toggle" class="filter-toggle-input" type="checkbox" />
+      <label
+        for="expenses-filter-toggle"
+        class="filter-toggle"
+        title="Mostrar u ocultar filtros"
+        aria-label="Mostrar u ocultar filtros"
+        ><i class="pi pi-filter"></i
+      ></label>
+      <div class="filters">
+        <p-select
+          [options]="filterOptions"
+          optionLabel="label"
+          optionValue="value"
+          [ngModel]="categoryFilter()"
+          (ngModelChange)="categoryFilter.set($event)"
+          appendTo="body"
+        /><p-select
+          [options]="paymentFilterOptions"
+          optionLabel="label"
+          optionValue="value"
+          [ngModel]="paymentFilter()"
+          (ngModelChange)="paymentFilter.set($event)"
+          appendTo="body"
+        /><span class="search"
+          ><i class="pi pi-search"></i
+          ><input
+            pInputText
+            type="search"
+            placeholder="Buscar gasto..."
+            [ngModel]="search()"
+            (ngModelChange)="search.set($event)" /></span
+        ><button
+          pButton
+          type="button"
+          [text]="true"
+          [rounded]="true"
+          severity="secondary"
+          title="Restablecer filtros"
+          (click)="resetFilters()"
+        >
+          <i class="pi pi-filter-slash"></i>
+        </button>
+      </div>
+    </div>
+    <p-table
+      class="desktop-data-table"
+      [value]="filteredRows()"
+      [loading]="loading()"
+      [paginator]="filteredRows().length > 10"
+      [rows]="10"
+      styleClass="mobile-card-table expenses-table"
+      ><ng-template #header
+        ><tr>
+          <th pSortableColumn="description">Descripción <p-sort-icon field="description" /></th>
+          <th pSortableColumn="category">Categoría <p-sort-icon field="category" /></th>
+          <th>Período</th>
+          <th>Observación</th>
+          <th pSortableColumn="payment_method">
+            Tipo de pago <p-sort-icon field="payment_method" />
+          </th>
+          <th pSortableColumn="is_paid">Estado <p-sort-icon field="is_paid" /></th>
+          <th pSortableColumn="amount">Importe <p-sort-icon field="amount" /></th>
+          <th></th></tr></ng-template
+      ><ng-template #body let-item
+        ><tr class="clickable-row" (click)="openDetail(item)">
+          <td>
+            <strong>{{ item.description }}</strong>
+          </td>
+          <td>
+            <span class="category" [attr.data-category]="item.category">{{
+              categoryLabel(item.category)
+            }}</span>
+          </td>
+          <td>{{ periodLabel() }}</td>
+          <td>{{ item.observation || '—' }}</td>
+          <td>{{ paymentLabel(item.payment_method) }}</td>
+          <td>
+            <span class="payment-status" [class.paid]="item.is_paid">{{
+              item.is_paid ? 'Pagado' : 'Pendiente'
+            }}</span>
+          </td>
+          <td class="amount">
+            @if (item.amount !== null) {
+              {{ formatCurrency(item.amount) }}
+            } @else {
+              <span class="pending-amount">Sin cargar</span>
+            }
+          </td>
+          <td>
+            <div class="actions">
+              <button
+                pButton
+                type="button"
+                [text]="true"
+                [rounded]="true"
+                title="Editar"
+                (click)="$event.stopPropagation(); openEdit(item)"
+              >
+                <i class="pi pi-pencil"></i></button
+              ><button
+                pButton
+                type="button"
+                [text]="true"
+                [rounded]="true"
+                severity="danger"
+                title="Eliminar"
+                (click)="$event.stopPropagation(); askDelete(item)"
+              >
+                <i class="pi pi-trash"></i>
+              </button>
+            </div>
+          </td></tr></ng-template
+      ><ng-template #emptymessage
+        ><tr>
+          <td colspan="8">
+            <div class="empty">
+              <i class="pi pi-wallet"></i><strong>No hay gastos en este período</strong
+              ><span>Agregá el primero para comenzar.</span>
+            </div>
+          </td>
+        </tr></ng-template
+      ></p-table
+    >
+    <div class="mobile-record-list">
+      @for (item of filteredRows(); track item.id) {
+        <article
+          class="mobile-record-card mobile-card-link"
+          tabindex="0"
+          (click)="openDetail(item)"
+        >
+          <header class="mobile-card-header">
+            <div>
+              <strong>{{ item.description }}</strong
+              ><small>{{ item.observation || 'Sin observación' }}</small>
+            </div>
+            <span class="category" [attr.data-category]="item.category">{{
+              categoryLabel(item.category)
+            }}</span>
+          </header>
+          <div class="mobile-card-grid">
+            <div>
+              <small>Período</small><strong>{{ periodLabel() }}</strong>
+            </div>
+            <div>
+              <small>Tipo de pago</small><strong>{{ paymentLabel(item.payment_method) }}</strong>
+            </div>
+            <div>
+              <small>Estado</small><strong>{{ item.is_paid ? 'Pagado' : 'Pendiente' }}</strong>
+            </div>
+            <div>
+              <small>Importe</small>
+              @if (item.amount !== null) {
+                <strong class="negative">{{ formatCurrency(item.amount) }}</strong>
+              } @else {
+                <strong class="pending-amount">Sin cargar</strong>
+              }
+            </div>
+          </div>
+          <div class="mobile-card-total">
+            <span>Importe total</span
+            ><strong class="negative">{{
+              item.amount !== null ? formatCurrency(item.amount) : 'Sin cargar'
+            }}</strong
+            ><i class="pi pi-chevron-right"></i>
+          </div>
+          <footer class="mobile-card-actions">
+            <button
+              pButton
+              type="button"
+              [text]="true"
+              [rounded]="true"
+              (click)="$event.stopPropagation(); openEdit(item)"
+            >
+              <i class="pi pi-pencil"></i> Editar</button
+            ><button
+              pButton
+              type="button"
+              [text]="true"
+              [rounded]="true"
+              severity="danger"
+              (click)="$event.stopPropagation(); askDelete(item)"
+            >
+              <i class="pi pi-trash"></i> Eliminar
+            </button>
+          </footer>
+        </article>
+      } @empty {
+        <div class="mobile-cards-empty">
+          <i class="pi pi-wallet"></i><strong>No hay gastos</strong>
+        </div>
+      }
+    </div>
+  </section>
+</section>
+<p-dialog
+  [visible]="copyVisible()"
+  (visibleChange)="copyVisible.set($event)"
+  header="Copiar gastos del mes anterior"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: 'min(700px, calc(100vw - 32px))' }"
+>
+  <p class="copy-description">
+    Seleccioná los gastos de <strong>{{ previousPeriodLabel() }}</strong> que querés crear en
+    {{ periodLabel() }}. Los importes no se copiarán.
+  </p>
+  @if (loadingPrevious()) {
+    <div class="copy-empty"><i class="pi pi-spinner pi-spin"></i> Cargando gastos...</div>
+  } @else if (!previousRows().length) {
+    <div class="copy-empty">
+      <i class="pi pi-inbox"></i><strong>No hay gastos en el período anterior</strong>
+    </div>
+  } @else {
+    <div class="copy-list">
+      <label class="copy-row copy-all"
+        ><input
+          type="checkbox"
+          [checked]="allPreviousSelected()"
+          (change)="toggleAllPrevious($any($event.target).checked)"
+        /><span>Seleccionar todos</span><small>{{ previousRows().length }} gastos</small></label
+      >
+      @for (item of previousRows(); track item.id) {
+        <label class="copy-row"
+          ><input
+            type="checkbox"
+            [checked]="selectedCopyIds().includes(item.id)"
+            (change)="toggleCopy(item.id, $any($event.target).checked)"
+          /><span
+            ><strong>{{ item.description }}</strong>
+            @if (item.observation) {
+              <small>{{ item.observation }}</small>
+            }</span
+          ><span class="category" [attr.data-category]="item.category">{{
+            categoryLabel(item.category)
+          }}</span></label
+        >
+      }
+    </div>
+  }
+  <div class="dialog-actions">
+    <button
+      pButton
+      type="button"
+      severity="secondary"
+      [outlined]="true"
+      (click)="copyVisible.set(false)"
+    >
+      Cancelar</button
+    ><button
+      pButton
+      type="button"
+      [loading]="saving()"
+      [disabled]="!selectedCopyIds().length"
+      (click)="copySelected()"
+    >
+      Copiar seleccionados ({{ selectedCopyIds().length }})
+    </button>
+  </div>
+</p-dialog>
+<p-dialog
+  [visible]="dialogVisible()"
+  (visibleChange)="dialogVisible.set($event)"
+  [header]="editing() ? 'Editar gasto' : 'Nuevo gasto'"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: 'min(580px, calc(100vw - 32px))' }"
+  ><form class="form" (ngSubmit)="save()">
+    <div class="field">
+      <label>Categoría *</label
+      ><p-select
+        name="category"
+        [options]="categoryOptions"
+        optionLabel="label"
+        optionValue="value"
+        [(ngModel)]="form.category"
+        appendTo="body"
+      />
+    </div>
+    <div class="field">
+      <label>Descripción *</label
+      ><input pInputText name="description" [(ngModel)]="form.description" />
+    </div>
+    <div class="field full">
+      <label>Tipo de pago *</label>
+      <p-select
+        name="payment_method"
+        [options]="paymentOptions"
+        optionLabel="label"
+        optionValue="value"
+        [(ngModel)]="form.payment_method"
+        appendTo="body"
+      />
+    </div>
+    <div class="field full">
+      <label>Importe *</label>
+      <div class="money-input">
+        <span>$</span
+        ><input
+          pInputText
+          name="amount"
+          type="text"
+          inputmode="decimal"
+          [ngModel]="formatMoneyInput(form.amount)"
+          (ngModelChange)="updateAmount($event)"
+        />
+      </div>
+    </div>
+    <div class="field full">
+      <label>Observación</label
+      ><textarea
+        pTextarea
+        name="observation"
+        [(ngModel)]="form.observation"
+        rows="3"
+        placeholder="Opcional"
+      ></textarea>
+    </div>
+    <div class="dialog-actions full">
+      <button
+        pButton
+        type="button"
+        severity="secondary"
+        [outlined]="true"
+        (click)="dialogVisible.set(false)"
+      >
+        Cancelar</button
+      ><button pButton type="submit" [loading]="saving()">Guardar</button>
+    </div>
+  </form></p-dialog
+>
+<p-dialog
+  [visible]="detailVisible()"
+  (visibleChange)="detailVisible.set($event)"
+  header="Detalle del gasto"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: 'min(760px, calc(100vw - 24px))' }"
+>
+  @if (selectedExpense(); as item) {
+    <div class="expense-detail-summary">
+      <div class="detail-title">
+        <span class="category" [attr.data-category]="item.category">{{
+          categoryLabel(item.category)
+        }}</span>
+        <h3>{{ item.description }}</h3>
+        <p>{{ item.observation || 'Sin observación' }}</p>
+      </div>
+      <strong class="detail-amount">{{ formatCurrency(item.amount) }}</strong>
+    </div>
+    <div class="detail-data-grid">
+      <div>
+        <small>Período</small><strong>{{ periodLabel() }}</strong>
+      </div>
+      <div>
+        <small>Tipo de pago</small><strong>{{ paymentLabel(item.payment_method) }}</strong>
+      </div>
+      <div>
+        <small>Estado</small
+        ><strong [class.paid-text]="item.is_paid">{{
+          item.is_paid ? 'Pagado' : 'Pendiente'
+        }}</strong>
+      </div>
+      <div>
+        <small>Fecha de pago</small><strong>{{ formatDate(item.paid_at) }}</strong>
+      </div>
+    </div>
+    <section class="payment-panel">
+      <label class="paid-control"
+        ><input type="checkbox" [(ngModel)]="detailPaid" /><span
+          ><strong>El gasto está pagado</strong
+          ><small>Activá esta opción cuando el pago se haya realizado.</small></span
+        ></label
+      >
+      @if (detailPaid) {
+        <div class="field">
+          <label>¿Cuándo se pagó? *</label
+          ><p-datepicker
+            [(ngModel)]="detailPaidAt"
+            dateFormat="dd/mm/yy"
+            [showIcon]="true"
+            appendTo="body"
+          />
+        </div>
+      }
+      <button pButton type="button" [loading]="saving()" (click)="savePaymentStatus()">
+        Guardar estado
+      </button>
+    </section>
+    <section class="attachments-panel">
+      <div class="attachments-heading">
+        <div>
+          <h3>Comprobantes</h3>
+          <span>{{ item.attachments?.length || 0 }} archivos adjuntos</span>
+        </div>
+        <p-fileupload
+          mode="basic"
+          chooseLabel="Subir comprobante"
+          chooseIcon="pi pi-upload"
+          [customUpload]="true"
+          [auto]="true"
+          accept="application/pdf,image/jpeg,image/png,image/webp"
+          [maxFileSize]="10000000"
+          [disabled]="uploading()"
+          (uploadHandler)="uploadReceipt($event)"
+        />
+      </div>
+      @if (item.attachments?.length) {
+        <div class="attachment-list">
+          @for (attachment of item.attachments; track attachment.id) {
+            <div class="attachment-row">
+              <i
+                [class]="
+                  attachment.content_type === 'application/pdf' ? 'pi pi-file-pdf' : 'pi pi-image'
+                "
+              ></i>
+              <div>
+                <strong>{{ attachment.name }}</strong
+                ><small>{{ formatFileSize(attachment.size) }}</small>
+              </div>
+              <a
+                pButton
+                [text]="true"
+                [rounded]="true"
+                [href]="attachment.download_url"
+                title="Descargar"
+                ><i class="pi pi-download"></i></a
+              ><button
+                pButton
+                type="button"
+                [text]="true"
+                [rounded]="true"
+                severity="danger"
+                title="Eliminar"
+                [disabled]="uploading()"
+                (click)="deleteAttachment(attachment.id)"
+              >
+                <i class="pi pi-trash"></i>
+              </button>
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="attachments-empty">
+          <i class="pi pi-paperclip"></i><span>Este gasto todavía no tiene comprobantes.</span>
+        </div>
+      }
+    </section>
+    <div class="dialog-actions">
+      <button
+        pButton
+        type="button"
+        severity="secondary"
+        [outlined]="true"
+        (click)="detailVisible.set(false)"
+      >
+        Cerrar
+      </button>
+    </div>
+  }
+</p-dialog>
+<p-dialog
+  [visible]="confirmVisible()"
+  (visibleChange)="confirmVisible.set($event)"
+  header="Eliminar gasto"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: 'min(450px, calc(100vw - 32px))' }"
+  ><div class="confirm">
+    <i class="pi pi-exclamation-triangle"></i>
+    <div>
+      <strong>¿Eliminar {{ toDelete()?.description }}?</strong>
+      <p>{{ formatCurrency(toDelete()?.amount) }} dejará de formar parte del total mensual.</p>
+    </div>
+  </div>
+  <div class="dialog-actions">
+    <button
+      pButton
+      type="button"
+      severity="secondary"
+      [outlined]="true"
+      (click)="confirmVisible.set(false)"
+    >
+      Cancelar</button
+    ><button pButton type="button" severity="danger" [loading]="saving()" (click)="delete()">
+      Eliminar
+    </button>
+  </div></p-dialog
+>

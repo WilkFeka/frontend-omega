@@ -1,0 +1,1246 @@
+<p-toast
+  position="bottom-right"
+  [life]="3000"
+/>
+
+<p-confirmdialog />
+
+<section class="salary-detail-page">
+
+  <header class="detail-header">
+
+    <div class="header-left">
+
+      <button
+        type="button"
+        class="back-button"
+        (click)="back()"
+      >
+        <i class="pi pi-arrow-left"></i>
+      </button>
+
+
+      <div>
+
+        <span class="page-eyebrow">
+          Sueldo
+        </span>
+
+        <h1>
+          @if (employee()) {
+            {{ employee()!.apellido }},
+            {{ employee()!.nombre }}
+          } @else {
+            Empleado
+          }
+        </h1>
+
+        <p>
+          Matrícula:
+          {{ employee()?.matricula || '-' }}
+        </p>
+
+      </div>
+
+    </div>
+
+
+    <div class="period-selector">
+
+      <label for="periodo">
+        Período
+      </label>
+
+      <div class="period-navigation">
+        <button type="button" aria-label="Mes anterior" (click)="movePeriod(-1)">
+          <i class="pi pi-chevron-left"></i>
+        </button>
+
+        <p-datepicker
+          inputId="periodo"
+          view="month"
+          dateFormat="mm/yy"
+          [showIcon]="true"
+          [readonlyInput]="true"
+          [ngModel]="periodDate()"
+          (ngModelChange)="changePeriodDate($event)"
+        />
+
+        <button type="button" aria-label="Mes siguiente" (click)="movePeriod(1)">
+          <i class="pi pi-chevron-right"></i>
+        </button>
+      </div>
+
+    </div>
+
+  </header>
+
+
+  @if (loading()) {
+
+    <section class="loading-card">
+      <i class="pi pi-spinner pi-spin"></i>
+      Cargando liquidación...
+    </section>
+
+  } @else {
+
+    <!-- ====================== SUMMARY ====================== -->
+
+    <section class="summary-grid">
+
+      <article class="summary-card receipt">
+
+        <span>Recibo de sueldo</span>
+
+        <strong>
+          {{ formatCurrency(previewReceipt()) }}
+        </strong>
+
+      </article>
+
+
+      <article class="summary-card discount">
+
+        <span>Descuentos</span>
+
+        <strong>
+          - {{ formatCurrency(previewDiscounts()) }}
+        </strong>
+
+      </article>
+
+
+      <article class="summary-card transfer">
+
+        <span>Transferencia real</span>
+
+        <strong>
+          {{ formatCurrency(previewTransfer()) }}
+        </strong>
+
+        <small>
+          Recibo menos descuentos
+        </small>
+
+      </article>
+
+
+      <article class="summary-card cash">
+
+        <span>Efectivo</span>
+
+        <strong>
+          {{ formatCurrency(previewCash()) }}
+        </strong>
+
+        <small>
+          Ajuste en efectivo
+        </small>
+
+      </article>
+
+
+      <article class="summary-card cash">
+
+        <span>Adicionales</span>
+
+        <strong>
+          + {{ formatCurrency(previewAdditionals()) }}
+        </strong>
+
+        <small>
+          Bonos y otros conceptos
+        </small>
+
+      </article>
+
+
+      <article class="summary-card total">
+
+        <span>Sueldo total</span>
+
+        <strong>
+          {{ formatCurrency(previewTotal()) }}
+        </strong>
+
+        <small>
+          Transferencia + efectivo + adicionales
+        </small>
+
+      </article>
+
+    </section>
+
+
+    <!-- ====================== LIQUIDACIÓN ====================== -->
+
+    <section class="detail-card">
+
+      <div class="section-header">
+
+        <div>
+
+          <h2>
+            Liquidación
+          </h2>
+
+          <p>
+            Cargá el recibo y el ajuste correspondiente al período.
+          </p>
+
+        </div>
+
+
+        @if (salary()) {
+
+          <div class="salary-actions">
+            <button
+              type="button"
+              class="cancel-button"
+              (click)="toggleCancelled()"
+              [disabled]="saving()"
+            >
+              @if (salary()!.anulado) {
+                <i class="pi pi-refresh"></i>
+                Reactivar
+              } @else {
+                <i class="pi pi-ban"></i>
+                Anular
+              }
+            </button>
+
+            <button
+              type="button"
+              class="danger-button"
+              (click)="deleteSalaryDialogVisible.set(true)"
+              [disabled]="saving()"
+            >
+              <i class="pi pi-trash"></i>
+              Eliminar
+            </button>
+          </div>
+
+        }
+
+      </div>
+
+
+      @if (salary()?.anulado) {
+
+        <div class="cancelled-alert">
+
+          <i class="pi pi-exclamation-triangle"></i>
+
+          Esta liquidación se encuentra anulada.
+
+        </div>
+
+      }
+
+
+      <form
+        class="salary-form"
+        (ngSubmit)="saveSalary()"
+      >
+
+        <div class="form-grid">
+
+          <div class="field">
+
+            <label for="importe_recibo">
+              Recibo de sueldo
+            </label>
+
+            <div class="money-input">
+
+              <span>$</span>
+
+              <input
+                pInputText
+                id="importe_recibo"
+                name="importe_recibo"
+                type="text"
+                inputmode="decimal"
+                [ngModel]="formatMoneyInput(salaryForm.importe_recibo)"
+                (ngModelChange)="updateMoneyField('importe_recibo', $event)"
+              />
+
+            </div>
+
+            <small>
+              Neto oficial que figura en el recibo.
+            </small>
+
+          </div>
+
+
+          <div class="field">
+
+            <label for="ajuste_efectivo">
+              Ajuste en efectivo
+            </label>
+
+            <div class="money-input">
+
+              <span>$</span>
+
+              <input
+                pInputText
+                id="ajuste_efectivo"
+                name="ajuste_efectivo"
+                type="text"
+                inputmode="decimal"
+                [ngModel]="formatMoneyInput(salaryForm.ajuste_efectivo)"
+                (ngModelChange)="updateMoneyField('ajuste_efectivo', $event)"
+              />
+
+            </div>
+
+            <small>
+              Importe adicional entregado en efectivo.
+            </small>
+
+          </div>
+
+
+          <div class="field">
+
+            <label for="fecha_pago_prevista">
+              Fecha prevista de pago
+            </label>
+
+            <p-datepicker
+              inputId="fecha_pago_prevista"
+              name="fecha_pago_prevista"
+              dataType="string"
+              dateFormat="yy-mm-dd"
+              [showIcon]="true"
+              [showClear]="true"
+              [ngModel]="salaryForm.fecha_pago_prevista"
+              (ngModelChange)="salaryForm.fecha_pago_prevista = $event || ''"
+              [appendTo]="'body'"
+            />
+
+          </div>
+
+
+          <div class="field">
+
+            <label for="moneda">
+              Moneda
+            </label>
+
+            <p-select
+              inputId="moneda"
+              name="moneda"
+              [options]="currencyOptions"
+              optionLabel="label"
+              optionValue="value"
+              [(ngModel)]="salaryForm.moneda"
+              [appendTo]="'body'"
+            />
+
+          </div>
+
+        </div>
+
+
+        <!-- ====================== CALCULATION ====================== -->
+
+        <div class="calculation">
+
+          <div class="calculation-row">
+
+            <span>
+              Recibo
+            </span>
+
+            <strong>
+              {{ formatCurrency(previewReceipt()) }}
+            </strong>
+
+          </div>
+
+
+          <div class="calculation-row negative">
+
+            <span>
+              Descuentos
+            </span>
+
+            <strong>
+              - {{ formatCurrency(previewDiscounts()) }}
+            </strong>
+
+          </div>
+
+
+          <div class="calculation-row result">
+
+            <span>
+              Transferencia real
+            </span>
+
+            <strong>
+              {{ formatCurrency(previewTransfer()) }}
+            </strong>
+
+          </div>
+
+
+          <div class="calculation-divider"></div>
+
+
+          <div class="calculation-row">
+
+            <span>
+              Transferencia
+            </span>
+
+            <strong>
+              {{ formatCurrency(previewTransfer()) }}
+            </strong>
+
+          </div>
+
+
+          <div class="calculation-row">
+
+            <span>
+              Ajuste en efectivo
+            </span>
+
+            <strong>
+              {{ formatCurrency(previewCash()) }}
+            </strong>
+
+          </div>
+
+
+          <div class="calculation-row">
+
+            <span>
+              Adicionales
+            </span>
+
+            <strong>
+              + {{ formatCurrency(previewAdditionals()) }}
+            </strong>
+
+          </div>
+
+
+          <div class="calculation-row grand-total">
+
+            <span>
+              Sueldo total
+            </span>
+
+            <strong>
+              {{ formatCurrency(previewTotal()) }}
+            </strong>
+
+          </div>
+
+        </div>
+
+
+        <!-- ====================== PAYMENT STATUS ====================== -->
+
+        <div class="payment-status-section">
+          <h3>Estado del pago</h3>
+
+          <div class="payment-status-grid">
+            <label class="payment-status-card">
+              <input
+                type="checkbox"
+                name="transferencia_realizada"
+                [(ngModel)]="salaryForm.transferencia_realizada"
+              />
+
+              <span class="status-icon transfer">
+                <i class="pi pi-building-columns"></i>
+              </span>
+
+              <span class="status-copy">
+                <strong>Transferencia realizada</strong>
+                <small>Importe esperado</small>
+                <b>{{ formatCurrency(previewTransfer()) }}</b>
+              </span>
+            </label>
+
+            <label class="payment-status-card">
+              <input
+                type="checkbox"
+                name="efectivo_entregado"
+                [(ngModel)]="salaryForm.efectivo_entregado"
+              />
+
+              <span class="status-icon cash">
+                <i class="pi pi-money-bill"></i>
+              </span>
+
+              <span class="status-copy">
+                <strong>Efectivo entregado</strong>
+                <small>Importe esperado</small>
+                <b>{{ formatCurrency(previewCash()) }}</b>
+              </span>
+            </label>
+          </div>
+        </div>
+
+
+        <!-- ====================== RECEIPT ====================== -->
+
+        <div class="receipt-section">
+
+          <h3>
+            Recibo
+          </h3>
+
+
+          <div class="receipt-options">
+
+            <label class="checkbox-option">
+
+              <input
+                type="checkbox"
+                name="recibo_entregado"
+                [(ngModel)]="salaryForm.recibo_entregado"
+              />
+
+              <span>
+                Recibo entregado
+              </span>
+
+            </label>
+
+
+            <label class="checkbox-option">
+
+              <input
+                type="checkbox"
+                name="recibo_firmado"
+                [(ngModel)]="salaryForm.recibo_firmado"
+              />
+
+              <span>
+                Recibo firmado
+              </span>
+
+            </label>
+
+
+            <div class="field">
+
+              <label for="fecha_entrega_recibo">
+                Fecha de entrega
+              </label>
+
+              <p-datepicker
+                inputId="fecha_entrega_recibo"
+                name="fecha_entrega_recibo"
+                dataType="string"
+                dateFormat="yy-mm-dd"
+                [showIcon]="true"
+                [showClear]="true"
+                [ngModel]="salaryForm.fecha_entrega_recibo"
+                (ngModelChange)="salaryForm.fecha_entrega_recibo = $event || ''"
+                [appendTo]="'body'"
+              />
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <div class="field">
+
+          <label for="observaciones">
+            Observaciones
+          </label>
+
+          <textarea
+            id="observaciones"
+            name="observaciones"
+            rows="4"
+            [(ngModel)]="salaryForm.observaciones"
+          ></textarea>
+
+        </div>
+
+
+        <div class="form-actions">
+
+          <button
+            pButton
+            type="submit"
+            class="primary-button"
+            [disabled]="saving() || !hasUnsavedChanges()"
+          >
+
+            @if (saving()) {
+
+              <i class="pi pi-spinner pi-spin"></i>
+              Guardando...
+
+            } @else {
+
+              <i class="pi pi-check"></i>
+
+              @if (salary()) {
+                Guardar cambios
+              } @else {
+                Crear liquidación
+              }
+
+            }
+
+          </button>
+
+        </div>
+
+      </form>
+
+    </section>
+
+
+    <!-- ====================== FILES ====================== -->
+
+    <section class="detail-card">
+      <div class="section-header">
+        <div>
+          <h2>Archivos</h2>
+          <p>Adjuntá comprobantes y documentación relacionada con la liquidación.</p>
+        </div>
+      </div>
+
+      <div class="files-grid">
+        <label class="upload-card">
+          <input
+            type="file"
+            accept="application/pdf"
+            (change)="selectTransferReceipt($event)"
+          />
+
+          <span class="upload-icon"><i class="pi pi-receipt"></i></span>
+          <span>
+            <strong>Comprobante de transferencia</strong>
+            <small>Archivo PDF</small>
+            @if (transferReceipt()) {
+              <b>{{ transferReceipt()!.name }}</b>
+            } @else {
+              <b>Seleccionar archivo</b>
+            }
+          </span>
+        </label>
+
+        <label class="upload-card">
+          <input type="file" multiple (change)="selectFiles($event)" />
+
+          <span class="upload-icon"><i class="pi pi-paperclip"></i></span>
+          <span>
+            <strong>Otros archivos</strong>
+            <small>Recibos y documentación adicional</small>
+            @if (selectedFiles().length) {
+              <b>{{ selectedFiles().length }} archivo(s) seleccionado(s)</b>
+            } @else {
+              <b>Seleccionar archivos</b>
+            }
+          </span>
+        </label>
+      </div>
+
+      <div class="files-notice">
+        <i class="pi pi-info-circle"></i>
+        Los archivos seleccionados todavía no se guardan en el servidor.
+      </div>
+    </section>
+
+
+    <!-- ====================== DISCOUNTS ====================== -->
+
+    <section class="detail-card">
+
+      <div class="section-header">
+
+        <div>
+
+          <h2>
+            Descuentos
+          </h2>
+
+          <p>
+            Los descuentos se restan del recibo para obtener la transferencia real.
+          </p>
+
+        </div>
+
+
+        <button
+          pButton
+          type="button"
+          class="primary-button"
+          [disabled]="!salary()"
+          (click)="openDiscountCreate()"
+        >
+          <i class="pi pi-plus"></i>
+          Agregar descuento
+        </button>
+
+      </div>
+
+
+      @if (!salary()) {
+
+        <div class="discount-disabled">
+
+          <i class="pi pi-info-circle"></i>
+
+          Primero creá la liquidación para poder agregar descuentos.
+
+        </div>
+
+      } @else {
+
+        <p-table
+          class="desktop-data-table"
+          [value]="discounts()"
+          styleClass="discount-table concept-table"
+        >
+
+          <ng-template #header>
+
+            <tr>
+              <th pSortableColumn="descripcion">Descripción <p-sort-icon field="descripcion" /></th>
+              <th pSortableColumn="importe">Importe <p-sort-icon field="importe" /></th>
+              <th></th>
+            </tr>
+
+          </ng-template>
+
+
+          <ng-template
+            #body
+            let-discount
+          >
+
+            <tr>
+
+              <td>
+                {{ discount.descripcion }}
+              </td>
+
+
+              <td class="discount-amount">
+                - {{ formatCurrency(discount.importe) }}
+              </td>
+
+
+              <td>
+
+                <div class="row-actions">
+
+                  <button
+                    type="button"
+                    title="Editar"
+                    (click)="openDiscountEdit(discount)"
+                  >
+                    <i class="pi pi-pencil"></i>
+                  </button>
+
+
+                  <button
+                    type="button"
+                    class="danger"
+                    title="Eliminar"
+                    (click)="askDeleteDiscount(discount)"
+                  >
+                    <i class="pi pi-trash"></i>
+                  </button>
+
+                </div>
+
+              </td>
+
+            </tr>
+
+          </ng-template>
+
+
+          <ng-template #emptymessage>
+
+            <tr>
+
+              <td colspan="3">
+
+                <div class="table-empty">
+
+                  <i class="pi pi-percentage"></i>
+
+                  <span>
+                    No hay descuentos cargados.
+                  </span>
+
+                </div>
+
+              </td>
+
+            </tr>
+
+          </ng-template>
+
+
+          <ng-template #footer>
+
+            <tr class="discount-footer">
+
+              <td>
+                Total descuentos
+              </td>
+
+              <td>
+                - {{ formatCurrency(previewDiscounts()) }}
+              </td>
+
+              <td></td>
+
+            </tr>
+
+          </ng-template>
+
+        </p-table>
+        <div class="mobile-record-list">
+          @for (discount of discounts(); track discount.id) {
+            <article class="mobile-record-card" tabindex="0">
+              <div class="mobile-record-header"><div class="mobile-record-avatar"><i class="pi pi-minus-circle"></i></div><div><small>Descuento</small><strong>{{ discount.descripcion }}</strong></div></div>
+              <div class="mobile-record-total"><span>Importe</span><strong class="mobile-record-negative">- {{ formatCurrency(discount.importe) }}</strong></div>
+              <div class="mobile-record-actions"><button type="button" (click)="openDiscountEdit(discount)"><i class="pi pi-pencil"></i> Editar</button><button type="button" class="danger" (click)="askDeleteDiscount(discount)"><i class="pi pi-trash"></i> Eliminar</button></div>
+            </article>
+          } @empty { <div class="mobile-record-empty"><i class="pi pi-minus-circle"></i><strong>No hay descuentos cargados</strong></div> }
+        </div>
+
+      }
+
+    </section>
+
+
+    <!-- ====================== ADDITIONALS ====================== -->
+
+    <section class="detail-card">
+      <div class="section-header">
+        <div>
+          <h2>Adicionales</h2>
+          <p>Los bonos y otros adicionales se suman al sueldo total.</p>
+        </div>
+
+        <button
+          pButton
+          type="button"
+          class="primary-button"
+          [disabled]="!salary()"
+          (click)="openAdditionalCreate()"
+        >
+          <i class="pi pi-plus"></i>
+          Agregar adicional
+        </button>
+      </div>
+
+      @if (!salary()) {
+        <div class="discount-disabled">
+          <i class="pi pi-info-circle"></i>
+          Primero creá la liquidación para poder agregar adicionales.
+        </div>
+      } @else {
+        <p-table class="desktop-data-table" [value]="additionals()" styleClass="discount-table concept-table">
+          <ng-template #header>
+            <tr>
+              <th pSortableColumn="descripcion">Descripción <p-sort-icon field="descripcion" /></th>
+              <th pSortableColumn="importe">Importe <p-sort-icon field="importe" /></th>
+              <th></th>
+            </tr>
+          </ng-template>
+
+          <ng-template #body let-additional>
+            <tr>
+              <td>{{ additional.descripcion }}</td>
+              <td class="cash-value">+ {{ formatCurrency(additional.importe) }}</td>
+              <td>
+                <div class="row-actions">
+                  <button type="button" title="Editar" (click)="openAdditionalEdit(additional)">
+                    <i class="pi pi-pencil"></i>
+                  </button>
+                  <button type="button" class="danger" title="Eliminar" (click)="askDeleteAdditional(additional)">
+                    <i class="pi pi-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+
+          <ng-template #emptymessage>
+            <tr>
+              <td colspan="3">
+                <div class="table-empty">
+                  <i class="pi pi-plus-circle"></i>
+                  <span>No hay adicionales cargados.</span>
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+
+          <ng-template #footer>
+            <tr class="discount-footer additional-footer">
+              <td>Total adicionales</td>
+              <td>+ {{ formatCurrency(previewAdditionals()) }}</td>
+              <td></td>
+            </tr>
+          </ng-template>
+        </p-table>
+        <div class="mobile-record-list">
+          @for (additional of additionals(); track additional.id) {
+            <article class="mobile-record-card" tabindex="0">
+              <div class="mobile-record-header"><div class="mobile-record-avatar"><i class="pi pi-plus-circle"></i></div><div><small>Adicional</small><strong>{{ additional.descripcion }}</strong></div></div>
+              <div class="mobile-record-total"><span>Importe</span><strong class="mobile-record-positive">+ {{ formatCurrency(additional.importe) }}</strong></div>
+              <div class="mobile-record-actions"><button type="button" (click)="openAdditionalEdit(additional)"><i class="pi pi-pencil"></i> Editar</button><button type="button" class="danger" (click)="askDeleteAdditional(additional)"><i class="pi pi-trash"></i> Eliminar</button></div>
+            </article>
+          } @empty { <div class="mobile-record-empty"><i class="pi pi-plus-circle"></i><strong>No hay adicionales cargados</strong></div> }
+        </div>
+      }
+    </section>
+
+  }
+
+</section>
+
+
+<!-- ====================== DISCOUNT DIALOG ====================== -->
+
+<p-dialog
+  [visible]="discountDialogVisible()"
+  (visibleChange)="discountDialogVisible.set($event)"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [header]="
+    editingDiscountId() === null
+      ? 'Agregar descuento'
+      : 'Editar descuento'
+  "
+  [style]="{
+    width: 'min(520px, calc(100vw - 32px))'
+  }"
+>
+
+  <form
+    class="dialog-form"
+    (ngSubmit)="saveDiscount()"
+  >
+
+    <div class="field">
+
+      <label for="discount_description">
+        Descripción
+      </label>
+
+      <input
+        pInputText
+        id="discount_description"
+        name="discount_description"
+        placeholder="Ej: Adelanto, préstamo, herramientas..."
+        [(ngModel)]="discountForm.descripcion"
+      />
+
+    </div>
+
+
+    <div class="field">
+
+      <label for="discount_amount">
+        Importe
+      </label>
+
+      <div class="money-input">
+
+        <span>$</span>
+
+        <input
+          pInputText
+          id="discount_amount"
+          name="discount_amount"
+          type="text"
+          inputmode="decimal"
+          [ngModel]="formatMoneyInput(discountForm.importe)"
+          (ngModelChange)="updateDiscountAmount($event)"
+        />
+
+      </div>
+
+    </div>
+
+
+    <div class="dialog-actions">
+
+      <button
+        type="button"
+        class="secondary-button"
+        [disabled]="saving()"
+        (click)="discountDialogVisible.set(false)"
+      >
+        Cancelar
+      </button>
+
+
+      <button
+        pButton
+        type="submit"
+        class="primary-button"
+        [disabled]="saving()"
+      >
+
+        @if (saving()) {
+          <i class="pi pi-spinner pi-spin"></i>
+        } @else {
+          <i class="pi pi-check"></i>
+        }
+
+        Guardar
+
+      </button>
+
+    </div>
+
+  </form>
+
+</p-dialog>
+
+
+<!-- ====================== ADDITIONAL DIALOG ====================== -->
+
+<p-dialog
+  [visible]="additionalDialogVisible()"
+  (visibleChange)="additionalDialogVisible.set($event)"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [header]="editingAdditionalId() === null ? 'Agregar adicional' : 'Editar adicional'"
+  [style]="{ width: 'min(520px, calc(100vw - 32px))' }"
+>
+  <form class="dialog-form" (ngSubmit)="saveAdditional()">
+    <div class="field">
+      <label for="additional_description">Descripción</label>
+      <input
+        pInputText
+        id="additional_description"
+        name="additional_description"
+        placeholder="Ej: Bono por productividad..."
+        [(ngModel)]="additionalForm.descripcion"
+      />
+    </div>
+
+    <div class="field">
+      <label for="additional_amount">Importe</label>
+      <div class="money-input">
+        <span>$</span>
+        <input
+          pInputText
+          id="additional_amount"
+          name="additional_amount"
+          type="text"
+          inputmode="decimal"
+          [ngModel]="formatMoneyInput(additionalForm.importe)"
+          (ngModelChange)="updateAdditionalAmount($event)"
+        />
+      </div>
+    </div>
+
+    <div class="dialog-actions">
+      <button type="button" class="secondary-button" [disabled]="saving()" (click)="additionalDialogVisible.set(false)">
+        Cancelar
+      </button>
+      <button pButton type="submit" class="primary-button" [disabled]="saving()">
+        @if (saving()) {
+          <i class="pi pi-spinner pi-spin"></i>
+        } @else {
+          <i class="pi pi-check"></i>
+        }
+        Guardar
+      </button>
+    </div>
+  </form>
+</p-dialog>
+
+
+<!-- ====================== DELETE ADDITIONAL DIALOG ====================== -->
+
+<p-dialog
+  [visible]="deleteAdditionalDialogVisible()"
+  (visibleChange)="deleteAdditionalDialogVisible.set($event)"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  header="Eliminar adicional"
+  [style]="{ width: 'min(430px, calc(100vw - 32px))' }"
+>
+  <div class="delete-confirm">
+    <div class="delete-icon"><i class="pi pi-exclamation-triangle"></i></div>
+    <div>
+      <strong>¿Eliminar este adicional?</strong>
+      <p>
+        {{ additionalToDelete()?.descripcion }} -
+        {{ formatCurrency(additionalToDelete()?.importe) }}
+      </p>
+      <p>El sueldo total se recalculará automáticamente.</p>
+    </div>
+  </div>
+
+  <div class="dialog-actions">
+    <button type="button" class="secondary-button" [disabled]="saving()" (click)="deleteAdditionalDialogVisible.set(false)">
+      Cancelar
+    </button>
+    <button type="button" class="danger-button" [disabled]="saving()" (click)="deleteAdditional()">
+      @if (saving()) {
+        <i class="pi pi-spinner pi-spin"></i>
+      } @else {
+        <i class="pi pi-trash"></i>
+      }
+      Eliminar
+    </button>
+  </div>
+</p-dialog>
+
+
+<!-- ====================== DELETE SALARY DIALOG ====================== -->
+
+<p-dialog
+  [visible]="deleteSalaryDialogVisible()"
+  (visibleChange)="deleteSalaryDialogVisible.set($event)"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  header="Eliminar liquidación"
+  [style]="{
+    width: 'min(430px, calc(100vw - 32px))'
+  }"
+>
+
+  <div class="delete-confirm">
+    <div class="delete-icon">
+      <i class="pi pi-exclamation-triangle"></i>
+    </div>
+
+    <div>
+      <strong>¿Eliminar esta liquidación?</strong>
+
+      <p>
+        Se eliminarán también todos sus descuentos y adicionales.
+        Esta acción no se puede deshacer.
+      </p>
+    </div>
+  </div>
+
+  <div class="dialog-actions">
+    <button
+      type="button"
+      class="secondary-button"
+      [disabled]="saving()"
+      (click)="deleteSalaryDialogVisible.set(false)"
+    >
+      Cancelar
+    </button>
+
+    <button
+      type="button"
+      class="danger-button"
+      [disabled]="saving()"
+      (click)="deleteSalary()"
+    >
+      @if (saving()) {
+        <i class="pi pi-spinner pi-spin"></i>
+      } @else {
+        <i class="pi pi-trash"></i>
+      }
+      Eliminar
+    </button>
+  </div>
+
+</p-dialog>
+
+
+<!-- ====================== DELETE DIALOG ====================== -->
+
+<p-dialog
+  [visible]="deleteDialogVisible()"
+  (visibleChange)="deleteDialogVisible.set($event)"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  header="Eliminar descuento"
+  [style]="{
+    width: 'min(430px, calc(100vw - 32px))'
+  }"
+>
+
+  <div class="delete-confirm">
+
+    <div class="delete-icon">
+      <i class="pi pi-exclamation-triangle"></i>
+    </div>
+
+    <div>
+
+      <strong>
+        ¿Eliminar este descuento?
+      </strong>
+
+      <p>
+        {{ discountToDelete()?.descripcion }}
+        -
+        {{ formatCurrency(discountToDelete()?.importe) }}
+      </p>
+
+      <p>
+        La transferencia y el sueldo total
+        se recalcularán automáticamente.
+      </p>
+
+    </div>
+
+  </div>
+
+
+  <div class="dialog-actions">
+
+    <button
+      type="button"
+      class="secondary-button"
+      [disabled]="saving()"
+      (click)="deleteDialogVisible.set(false)"
+    >
+      Cancelar
+    </button>
+
+
+    <button
+      type="button"
+      class="danger-button"
+      [disabled]="saving()"
+      (click)="deleteDiscount()"
+    >
+
+      @if (saving()) {
+        <i class="pi pi-spinner pi-spin"></i>
+      } @else {
+        <i class="pi pi-trash"></i>
+      }
+
+      Eliminar
+
+    </button>
+
+  </div>
+
+</p-dialog>

@@ -98,6 +98,10 @@ export class Usuarios implements OnInit {
     });
   });
 
+  resetFilters(): void {
+    this.search.set('');
+  }
+
 
   readonly activeUsers = computed(() => {
     return this.users().filter(user =>
