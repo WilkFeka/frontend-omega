@@ -42,7 +42,11 @@ h1 {
   align-items: flex-end;
   gap: 18px;
 }
-.header-buttons { display: flex; align-items: center; gap: 10px; }
+.header-buttons {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
 .period-selector {
   display: flex;
   flex-direction: column;
@@ -125,6 +129,14 @@ h1 {
   color: #52525b;
   background: #f4f4f5;
 }
+.transfer .stat-icon {
+  color: #2563eb;
+  background: #dbeafe;
+}
+.cash .stat-icon {
+  color: #15803d;
+  background: #dcfce7;
+}
 .total {
   border-color: #e9b7f5;
   background: #fffaff;
@@ -179,7 +191,179 @@ h1 {
   color: #b91c1c;
   font-weight: 700;
 }
-.pending-amount { color: #a16207; font-size: 0.75rem; font-weight: 700; }
+.clickable-row {
+  cursor: pointer;
+}
+.clickable-row:hover {
+  background: #faf5ff !important;
+}
+.payment-status {
+  display: inline-flex;
+  padding: 5px 9px;
+  color: #a16207;
+  background: #fef3c7;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+.payment-status.paid {
+  color: #15803d;
+  background: #dcfce7;
+}
+.expense-detail-summary {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid #e4e4e7;
+}
+.detail-title h3 {
+  margin: 10px 0 4px;
+  font-size: 1.2rem;
+}
+.detail-title p {
+  margin: 0;
+  color: #71717a;
+}
+.detail-amount {
+  color: #b91c1c;
+  font-size: 1.3rem;
+  white-space: nowrap;
+}
+.detail-data-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  margin: 18px 0;
+  overflow: hidden;
+  background: #e4e4e7;
+  border: 1px solid #e4e4e7;
+  border-radius: 12px;
+}
+.detail-data-grid > div {
+  display: flex;
+  min-height: 72px;
+  padding: 12px;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  background: #fff;
+}
+.detail-data-grid small {
+  color: #71717a;
+  font-size: 0.7rem;
+}
+.detail-data-grid strong {
+  font-size: 0.84rem;
+}
+.paid-text {
+  color: #15803d;
+}
+.payment-panel,
+.attachments-panel {
+  margin-top: 16px;
+  padding: 16px;
+  background: #fafafa;
+  border: 1px solid #e4e4e7;
+  border-radius: 12px;
+}
+.payment-panel {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+.payment-panel .field {
+  min-width: 190px;
+  flex: 1;
+}
+.paid-control {
+  display: flex;
+  min-width: 240px;
+  flex: 2;
+  align-items: center;
+  gap: 11px;
+  cursor: pointer;
+}
+.paid-control input {
+  width: 18px;
+  height: 18px;
+  accent-color: #9810d5;
+}
+.paid-control span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.paid-control small {
+  color: #71717a;
+  font-size: 0.72rem;
+}
+.attachments-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.attachments-heading h3 {
+  margin: 0 0 3px;
+  font-size: 0.95rem;
+}
+.attachments-heading span {
+  color: #71717a;
+  font-size: 0.75rem;
+}
+.attachment-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+.attachment-row {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  background: #fff;
+  border: 1px solid #e4e4e7;
+  border-radius: 10px;
+}
+.attachment-row > i {
+  color: #9810d5;
+  font-size: 1.2rem;
+}
+.attachment-row > div {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+}
+.attachment-row strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.8rem;
+}
+.attachment-row small {
+  color: #71717a;
+  font-size: 0.68rem;
+}
+.attachments-empty {
+  display: flex;
+  min-height: 100px;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 7px;
+  color: #71717a;
+}
+.pending-amount {
+  color: #a16207;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
 .category {
   display: inline-flex;
   padding: 5px 9px;
@@ -266,10 +450,62 @@ h1 {
   color: #71717a;
   font-size: 0.82rem;
 }
-.copy-description { margin: 0 0 16px; color: #52525b; font-size: 0.84rem; line-height: 1.5; }
-.copy-list { overflow: hidden; border: 1px solid #e4e4e7; border-radius: 12px; }
-.copy-row { display: grid; grid-template-columns: 20px minmax(0, 1fr) auto; align-items: center; gap: 12px; min-height: 56px; padding: 10px 14px; border-bottom: 1px solid #f4f4f5; cursor: pointer; }
-.copy-row:last-child { border-bottom: 0; }.copy-row:hover { background: #faf5ff; }.copy-row input { width: 17px; height: 17px; accent-color: #9810d5; }.copy-row > span:nth-child(2) { display: flex; min-width: 0; flex-direction: column; gap: 2px; }.copy-row small { color: #71717a; font-size: 0.72rem; }.copy-all { min-height: 48px; background: #fafafa; font-weight: 700; }.copy-empty { display: flex; min-height: 150px; align-items: center; justify-content: center; flex-direction: column; gap: 8px; color: #71717a; }
+.copy-description {
+  margin: 0 0 16px;
+  color: #52525b;
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+.copy-list {
+  overflow: hidden;
+  border: 1px solid #e4e4e7;
+  border-radius: 12px;
+}
+.copy-row {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  padding: 10px 14px;
+  border-bottom: 1px solid #f4f4f5;
+  cursor: pointer;
+}
+.copy-row:last-child {
+  border-bottom: 0;
+}
+.copy-row:hover {
+  background: #faf5ff;
+}
+.copy-row input {
+  width: 17px;
+  height: 17px;
+  accent-color: #9810d5;
+}
+.copy-row > span:nth-child(2) {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+.copy-row small {
+  color: #71717a;
+  font-size: 0.72rem;
+}
+.copy-all {
+  min-height: 48px;
+  background: #fafafa;
+  font-weight: 700;
+}
+.copy-empty {
+  display: flex;
+  min-height: 150px;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 8px;
+  color: #71717a;
+}
 @media (max-width: 1000px) {
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -298,6 +534,27 @@ h1 {
     grid-column: auto;
   }
   .search input {
+    width: 100%;
+  }
+  .expense-detail-summary,
+  .attachments-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .detail-amount {
+    align-self: flex-start;
+  }
+  .detail-data-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .payment-panel {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .paid-control {
+    min-width: 0;
+  }
+  .attachments-heading p-fileupload {
     width: 100%;
   }
 }

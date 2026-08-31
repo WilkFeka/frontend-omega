@@ -41,7 +41,7 @@
 
         @if (item.visible !== false) {
 
-          <li class="nav-list-item">
+          <li class="nav-list-item" [class.mobile-overflow-item]="$index >= 4">
 
             <a
               class="nav-item"
@@ -81,6 +81,9 @@
       }
 
     </ul>
+
+    <button type="button" class="mobile-more-button" aria-label="Más secciones" (click)="mobileMenu.toggle($event)"><span class="nav-icon"><i class="pi pi-bars"></i></span><span class="nav-label">Más</span></button>
+    <p-menu #mobileMenu [model]="mobileMoreItems" [popup]="true" appendTo="body" styleClass="mobile-dock-menu" />
 
   </nav>
 

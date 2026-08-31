@@ -22,13 +22,6 @@
     </div>
 
 
-    @if (activeSection() === 'employees') {
-      <button pButton type="button" class="primary-button" (click)="openCreate()">
-        <i class="pi pi-plus"></i>
-        Nuevo empleado
-      </button>
-    }
-
   </header>
 
   <p-tabs [value]="activeSection()" (valueChange)="activeSection.set($any($event))" [lazy]="true">
@@ -119,6 +112,14 @@
         </span>
       </div>
 
+      <input id="employees-filter-toggle" class="filter-toggle-input" type="checkbox" />
+      <label for="employees-filter-toggle" class="filter-toggle" title="Mostrar u ocultar filtros" aria-label="Mostrar u ocultar filtros"><i class="pi pi-filter"></i></label>
+
+      <button pButton type="button" class="primary-button" (click)="openCreate()">
+        <i class="pi pi-plus"></i>
+        Nuevo empleado
+      </button>
+
 
       <div class="employee-filters">
         <p-select [options]="groupOptions()" optionLabel="label" optionValue="value" [ngModel]="groupFilter()" (ngModelChange)="groupFilter.set($event)" [appendTo]="'body'" />
@@ -152,13 +153,14 @@
 
 
     <p-table
+      class="desktop-data-table"
       [value]="filteredEmployees()"
       [loading]="loading()"
       [paginator]="filteredEmployees().length > 10"
       [rows]="10"
       [rowsPerPageOptions]="[10, 25, 50]"
       [scrollable]="true"
-      styleClass="employees-table"
+      styleClass="mobile-card-table employees-table"
     >
 
       <ng-template #header>
@@ -317,6 +319,16 @@
       </ng-template>
 
     </p-table>
+
+    <div class="mobile-record-list">
+      @for (employee of filteredEmployees(); track employee.id) {
+        <article class="mobile-record-card" tabindex="0">
+          <header class="mobile-card-header"><div class="employee-cell"><div class="avatar">{{ employee.nombre.charAt(0).toUpperCase() }}</div><span class="employee-name-status"><strong>{{ getFullName(employee) }}</strong>@if (employee.fecha_baja) { <small>Dado de baja</small> }</span></div><span class="mobile-status" [class.inactive]="employee.fecha_baja">{{ employee.fecha_baja ? 'Inactivo' : 'Activo' }}</span></header>
+          <div class="mobile-card-grid"><div><small>Grupo</small><strong>{{ employee.group?.nombre || '—' }}</strong></div><div><small>Cargo</small><strong>{{ employee.position?.nombre || '—' }}</strong></div><div><small>Gremio</small><strong>{{ employee.gremio || '—' }}</strong></div><div><small>Matrícula</small><strong>{{ employee.matricula || '—' }}</strong></div><div><small>Teléfono</small><strong>{{ employee.telefono || '—' }}</strong></div><div><small>Ingreso</small><strong>{{ formatDate(employee.fecha_ingreso) }}</strong></div></div>
+          <footer class="mobile-card-actions"><button type="button" class="icon-button" [class.success]="employee.fecha_baja" [class.warning]="!employee.fecha_baja" (click)="toggleEmployeeStatus(employee)"><i [class]="employee.fecha_baja ? 'pi pi-user-plus' : 'pi pi-user-minus'"></i></button><button type="button" class="icon-button" (click)="openEdit(employee)"><i class="pi pi-pencil"></i></button><button type="button" class="icon-button danger" (click)="askDelete(employee)"><i class="pi pi-trash"></i></button></footer>
+        </article>
+      } @empty { <div class="mobile-cards-empty"><i class="pi pi-users"></i><strong>No hay empleados</strong></div> }
+    </div>
 
   </section>
 

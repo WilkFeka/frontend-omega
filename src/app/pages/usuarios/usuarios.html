@@ -1,44 +1,29 @@
 <!-- <app-navbar></app-navbar> -->
 
-<p-toast
-  position="bottom-right"
-  [life]="3000"
-/>
+<p-toast position="bottom-right" [life]="3000" />
 
 <section class="users-page">
-
   <header class="page-header">
-
     <div>
-      <span class="page-eyebrow">
-        Administración
-      </span>
+      <span class="page-eyebrow"> Administración </span>
 
       <h1>Usuarios</h1>
 
       <p>
         Gestioná los usuarios y accesos de
-        <strong>{{ tenantName() || 'la empresa' }}</strong>.
+        <strong>{{ tenantName() || 'la empresa' }}</strong
+        >.
       </p>
     </div>
 
-    <button
-      pButton
-      type="button"
-      class="primary-button"
-      (click)="openCreate()"
-    >
+    <button pButton type="button" class="primary-button" (click)="openCreate()">
       <i class="pi pi-plus"></i>
       Nuevo usuario
     </button>
-
   </header>
 
-
   <div class="stats-grid">
-
     <article class="stat-card">
-
       <div class="stat-icon">
         <i class="pi pi-users"></i>
       </div>
@@ -47,12 +32,9 @@
         <span>Total</span>
         <strong>{{ users().length }}</strong>
       </div>
-
     </article>
 
-
     <article class="stat-card">
-
       <div class="stat-icon success">
         <i class="pi pi-check-circle"></i>
       </div>
@@ -61,12 +43,9 @@
         <span>Activos</span>
         <strong>{{ activeUsers() }}</strong>
       </div>
-
     </article>
 
-
     <article class="stat-card">
-
       <div class="stat-icon warning">
         <i class="pi pi-user-minus"></i>
       </div>
@@ -75,12 +54,9 @@
         <span>Inactivos</span>
         <strong>{{ inactiveUsers() }}</strong>
       </div>
-
     </article>
 
-
     <article class="stat-card">
-
       <div class="stat-icon admin">
         <i class="pi pi-shield"></i>
       </div>
@@ -89,16 +65,11 @@
         <span>Administradores</span>
         <strong>{{ admins() }}</strong>
       </div>
-
     </article>
-
   </div>
 
-
   <section class="table-card">
-
     <div class="table-toolbar">
-
       <div>
         <h2>Usuarios</h2>
 
@@ -108,13 +79,12 @@
         </span>
       </div>
 
+      <input id="users-filter-toggle" class="filter-toggle-input" type="checkbox" />
+      <label for="users-filter-toggle" class="filter-toggle" title="Mostrar u ocultar filtros" aria-label="Mostrar u ocultar filtros"><i class="pi pi-filter"></i></label>
 
+      <div class="filters">
       <div class="search-wrapper">
-
-        <i
-          class="pi pi-search"
-          aria-hidden="true"
-        ></i>
+        <i class="pi pi-search" aria-hidden="true"></i>
 
         <input
           pInputText
@@ -124,26 +94,34 @@
           [ngModel]="search()"
           (ngModelChange)="search.set($event)"
         />
-
       </div>
 
-      <button pButton type="button" [text]="true" [rounded]="true" severity="secondary" title="Restablecer filtros" aria-label="Restablecer filtros" (click)="resetFilters()"><i class="pi pi-filter-slash"></i></button>
-
+      <button
+        pButton
+        type="button"
+        [text]="true"
+        [rounded]="true"
+        severity="secondary"
+        title="Restablecer filtros"
+        aria-label="Restablecer filtros"
+        (click)="resetFilters()"
+      >
+        <i class="pi pi-filter-slash"></i>
+      </button>
+      </div>
     </div>
 
-
     <p-table
+      class="desktop-data-table"
       [value]="filteredUsers()"
       [loading]="loading()"
       [paginator]="filteredUsers().length > 10"
       [rows]="10"
       [rowsPerPageOptions]="[10, 25, 50]"
       [scrollable]="true"
-      styleClass="users-table"
+      styleClass="mobile-card-table users-table"
     >
-
       <ng-template #header>
-
         <tr>
           <th pSortableColumn="first_name">Nombre <p-sort-icon field="first_name" /></th>
           <th pSortableColumn="username">Usuario <p-sort-icon field="username" /></th>
@@ -152,116 +130,68 @@
           <th pSortableColumn="is_active">Estado <p-sort-icon field="is_active" /></th>
           <th pSortableColumn="is_staff">Acceso <p-sort-icon field="is_staff" /></th>
 
-          <th class="actions-column">
-            Acciones
-          </th>
+          <th class="actions-column">Acciones</th>
         </tr>
-
       </ng-template>
 
-
-      <ng-template
-        #body
-        let-user
-      >
-
+      <ng-template #body let-user>
         <tr>
-
           <td>
-
             <div class="user-cell">
-
               <div class="avatar">
-                {{
-                  (
-                    user.first_name ||
-                    user.username
-                  )
-                    .charAt(0)
-                    .toUpperCase()
-                }}
+                {{ (user.first_name || user.username).charAt(0).toUpperCase() }}
               </div>
 
               <span>
                 {{ getDisplayName(user) }}
               </span>
-
             </div>
-
           </td>
-
 
           <td>
             {{ user.username }}
           </td>
 
-
           <td>
             {{ user.email || '-' }}
           </td>
 
-
           <td>
-
-            <span
-              class="badge"
-              [class.badge-admin]="
-                user.is_staff ||
-                user.is_superuser
-              "
-            >
+            <span class="badge" [class.badge-admin]="user.is_staff || user.is_superuser">
               {{ getRole(user) }}
             </span>
-
           </td>
 
-
           <td>
-
             @if (user.user_active) {
-
               <span class="status status-active">
                 <span></span>
                 Activo
               </span>
-
             } @else {
-
               <span class="status status-inactive">
                 <span></span>
                 Inactivo
               </span>
-
             }
-
           </td>
 
-
           <td>
-
             @if (user.membership_active) {
-
               <span class="status status-active">
                 <span></span>
                 Habilitado
               </span>
-
             } @else {
-
               <span class="status status-inactive">
                 <span></span>
                 Deshabilitado
               </span>
-
             }
-
           </td>
 
-
           <td>
-
             <div class="actions">
-
               <button
                 type="button"
                 class="icon-button"
@@ -272,9 +202,7 @@
                 <i class="pi pi-pencil"></i>
               </button>
 
-
               @if (user.membership_active) {
-
                 <button
                   type="button"
                   class="icon-button danger"
@@ -284,9 +212,7 @@
                 >
                   <i class="pi pi-user-minus"></i>
                 </button>
-
               } @else {
-
                 <button
                   type="button"
                   class="icon-button success"
@@ -296,51 +222,79 @@
                 >
                   <i class="pi pi-user-plus"></i>
                 </button>
-
               }
-
             </div>
-
           </td>
-
         </tr>
-
       </ng-template>
-
 
       <ng-template #emptymessage>
-
         <tr>
-
           <td colspan="7">
-
             <div class="empty-state">
-
               <i class="pi pi-users"></i>
 
-              <strong>
-                No hay usuarios
-              </strong>
+              <strong> No hay usuarios </strong>
 
-              <span>
-                No encontramos usuarios
-                con los filtros actuales.
-              </span>
-
+              <span> No encontramos usuarios con los filtros actuales. </span>
             </div>
-
           </td>
-
         </tr>
-
       </ng-template>
-
     </p-table>
 
+    <div class="mobile-record-list">
+      @for (user of filteredUsers(); track user.id) {
+        <article class="mobile-record-card" tabindex="0">
+          <header class="mobile-card-header">
+            <div class="user-cell">
+              <div class="avatar">
+                {{ (user.first_name || user.username).charAt(0).toUpperCase() }}
+              </div>
+              <strong>{{ getDisplayName(user) }}</strong>
+            </div>
+            <span class="mobile-status" [class.inactive]="!user.user_active">{{
+              user.user_active ? 'Activo' : 'Inactivo'
+            }}</span>
+          </header>
+          <div class="mobile-card-grid">
+            <div>
+              <small>Usuario</small><strong>{{ user.username }}</strong>
+            </div>
+            <div>
+              <small>Rol</small><strong>{{ getRole(user) }}</strong>
+            </div>
+            <div class="wide">
+              <small>Email</small><strong>{{ user.email || '—' }}</strong>
+            </div>
+            <div>
+              <small>Acceso</small
+              ><strong>{{ user.membership_active ? 'Habilitado' : 'Deshabilitado' }}</strong>
+            </div>
+          </div>
+          <footer class="mobile-card-actions">
+            <button type="button" class="icon-button" (click)="openEdit(user)">
+              <i class="pi pi-pencil"></i>
+            </button>
+            @if (user.membership_active) {
+              <button type="button" class="icon-button danger" (click)="askDeactivate(user)">
+                <i class="pi pi-user-minus"></i>
+              </button>
+            } @else {
+              <button type="button" class="icon-button success" (click)="reactivate(user)">
+                <i class="pi pi-user-plus"></i>
+              </button>
+            }
+          </footer>
+        </article>
+      } @empty {
+        <div class="mobile-cards-empty">
+          <i class="pi pi-users"></i><strong>No hay usuarios</strong>
+        </div>
+      }
+    </div>
   </section>
-
 </section>
-
 
 <p-dialog
   [visible]="dialogVisible()"
@@ -348,29 +302,16 @@
   [modal]="true"
   [draggable]="false"
   [resizable]="false"
-  [header]="
-    editingId() === null
-      ? 'Nuevo usuario'
-      : 'Editar usuario'
-  "
+  [header]="editingId() === null ? 'Nuevo usuario' : 'Editar usuario'"
   [style]="{
-    width: 'min(680px, calc(100vw - 32px))'
+    width: 'min(680px, calc(100vw - 32px))',
   }"
   styleClass="user-dialog"
 >
-
-  <form
-    class="user-form"
-    (ngSubmit)="saveUser()"
-  >
-
+  <form class="user-form" (ngSubmit)="saveUser()">
     <div class="form-grid">
-
       <div class="field">
-
-        <label for="first_name">
-          Nombre
-        </label>
+        <label for="first_name"> Nombre </label>
 
         <input
           pInputText
@@ -379,15 +320,10 @@
           [(ngModel)]="form.first_name"
           autocomplete="given-name"
         />
-
       </div>
 
-
       <div class="field">
-
-        <label for="last_name">
-          Apellido
-        </label>
+        <label for="last_name"> Apellido </label>
 
         <input
           pInputText
@@ -396,12 +332,9 @@
           [(ngModel)]="form.last_name"
           autocomplete="family-name"
         />
-
       </div>
 
-
       <div class="field">
-
         <label for="username">
           Username
           <span>*</span>
@@ -415,15 +348,10 @@
           autocomplete="username"
           required
         />
-
       </div>
 
-
       <div class="field">
-
-        <label for="email">
-          Email
-        </label>
+        <label for="email"> Email </label>
 
         <input
           pInputText
@@ -433,21 +361,16 @@
           [(ngModel)]="form.email"
           autocomplete="email"
         />
-
       </div>
 
-
       <div class="field full-width">
-
         <label for="password">
-
           @if (editingId() === null) {
             Contraseña
             <span>*</span>
           } @else {
             Nueva contraseña
           }
-
         </label>
 
         <input
@@ -458,121 +381,63 @@
           [(ngModel)]="form.password"
           autocomplete="new-password"
           [placeholder]="
-            editingId() === null
-              ? 'Mínimo 6 caracteres'
-              : 'Dejar vacío para conservarla'
+            editingId() === null ? 'Mínimo 6 caracteres' : 'Dejar vacío para conservarla'
           "
         />
-
       </div>
-
     </div>
 
-
     <div class="form-options">
-
       <label class="checkbox-option">
-
-        <input
-          type="checkbox"
-          name="is_staff"
-          [(ngModel)]="form.is_staff"
-        />
+        <input type="checkbox" name="is_staff" [(ngModel)]="form.is_staff" />
 
         <span>
           <strong>Administrador</strong>
 
-          <small>
-            Puede administrar usuarios.
-          </small>
+          <small> Puede administrar usuarios. </small>
         </span>
-
       </label>
 
-
       @if (editingId() !== null) {
-
         <label class="checkbox-option">
-
-          <input
-            type="checkbox"
-            name="user_active"
-            [(ngModel)]="form.user_active"
-          />
+          <input type="checkbox" name="user_active" [(ngModel)]="form.user_active" />
 
           <span>
             <strong>Usuario activo</strong>
 
-            <small>
-              Estado global del usuario.
-            </small>
+            <small> Estado global del usuario. </small>
           </span>
-
         </label>
 
-
         <label class="checkbox-option">
-
-          <input
-            type="checkbox"
-            name="membership_active"
-            [(ngModel)]="form.membership_active"
-          />
+          <input type="checkbox" name="membership_active" [(ngModel)]="form.membership_active" />
 
           <span>
             <strong>Acceso al tenant</strong>
 
-            <small>
-              Permite ingresar a esta empresa.
-            </small>
+            <small> Permite ingresar a esta empresa. </small>
           </span>
-
         </label>
-
       }
-
     </div>
 
-
     <div class="dialog-actions">
-
-      <button
-        type="button"
-        class="secondary-button"
-        (click)="closeDialog()"
-        [disabled]="saving()"
-      >
+      <button type="button" class="secondary-button" (click)="closeDialog()" [disabled]="saving()">
         Cancelar
       </button>
 
-
-      <button
-        pButton
-        type="submit"
-        class="primary-button"
-        [disabled]="saving()"
-      >
-
+      <button pButton type="submit" class="primary-button" [disabled]="saving()">
         @if (saving()) {
-
           <i class="pi pi-spinner pi-spin"></i>
           Guardando...
-
         } @else {
-
           <i class="pi pi-check"></i>
           Guardar
-
         }
-
       </button>
-
     </div>
-
   </form>
-
 </p-dialog>
-
 
 <p-dialog
   [visible]="confirmVisible()"
@@ -582,21 +447,16 @@
   [resizable]="false"
   header="Desactivar acceso"
   [style]="{
-    width: 'min(460px, calc(100vw - 32px))'
+    width: 'min(460px, calc(100vw - 32px))',
   }"
 >
-
   <div class="confirm-content">
-
     <div class="confirm-icon">
       <i class="pi pi-exclamation-triangle"></i>
     </div>
 
     <div>
-
-      <strong>
-        ¿Desactivar acceso?
-      </strong>
+      <strong> ¿Desactivar acceso? </strong>
 
       <p>
         El usuario
@@ -607,17 +467,11 @@
         {{ tenantName() }}.
       </p>
 
-      <p>
-        El usuario global no será eliminado.
-      </p>
-
+      <p>El usuario global no será eliminado.</p>
     </div>
-
   </div>
 
-
   <div class="dialog-actions">
-
     <button
       type="button"
       class="secondary-button"
@@ -627,28 +481,14 @@
       Cancelar
     </button>
 
-
-    <button
-      type="button"
-      class="danger-button"
-      (click)="deactivate()"
-      [disabled]="saving()"
-    >
-
+    <button type="button" class="danger-button" (click)="deactivate()" [disabled]="saving()">
       @if (saving()) {
-
         <i class="pi pi-spinner pi-spin"></i>
-
       } @else {
-
         <i class="pi pi-user-minus"></i>
-
       }
 
       Desactivar
-
     </button>
-
   </div>
-
 </p-dialog>

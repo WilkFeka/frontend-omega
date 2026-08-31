@@ -139,8 +139,24 @@ export class Prestamos implements OnInit {
   }
 
   async createLoan(): Promise<void> {
-    if (Number(this.form.total_amount) <= 0 || !this.form.delivery_date || !this.form.first_installment_period || !this.form.installment_count) {
-      this.showError('Completá los campos obligatorios.');
+    const totalAmount = Number(String(this.form.total_amount ?? '').replace(/,/g, ''));
+    const installmentCount = Number(this.form.installment_count);
+    if (!Number.isFinite(totalAmount) || totalAmount <= 0) {
+      this.showError('Ingresá un monto total mayor a cero.');
+      return;
+    }
+    if (!Number.isInteger(installmentCount) || installmentCount < 1 || installmentCount > 240) {
+      this.showError('Ingresá una cantidad de cuotas entre 1 y 240.');
+      return;
+    }
+    const deliveryDate = this.toIsoDate(this.form.delivery_date);
+    if (!deliveryDate) {
+      this.showError('Seleccioná una fecha de entrega válida.');
+      return;
+    }
+    const firstInstallmentPeriod = this.toIsoDate(this.form.first_installment_period);
+    if (!firstInstallmentPeriod) {
+      this.showError('Seleccioná el período de la primera cuota.');
       return;
     }
     if (this.form.person_type === 'EMPLEADO' && !this.form.employee_id) {
@@ -153,9 +169,10 @@ export class Prestamos implements OnInit {
     }
     const payload: CreateLoanRequest = {
       ...this.form,
-      total_amount: Number(this.form.total_amount),
-      delivery_date: this.toIsoDate(this.form.delivery_date),
-      first_installment_period: this.toIsoDate(this.form.first_installment_period)
+      total_amount: totalAmount,
+      installment_count: installmentCount,
+      delivery_date: deliveryDate,
+      first_installment_period: firstInstallmentPeriod
     };
     this.saving.set(true);
     try {
@@ -353,8 +370,11 @@ export class Prestamos implements OnInit {
     return { period: new Date(), expected_amount: '', paid_amount: '', status: 'PENDIENTE', payment_date: null, payment_method: '', notes: '' };
   }
 
-  private toIsoDate(value: Date): string {
-    return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, '0')}-${String(value.getDate()).padStart(2, '0')}`;
+  private toIsoDate(value: Date | string | null | undefined): string {
+    if (!value) return '';
+    const dateValue = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(dateValue.getTime())) return '';
+    return `${dateValue.getFullYear()}-${String(dateValue.getMonth() + 1).padStart(2, '0')}-${String(dateValue.getDate()).padStart(2, '0')}`;
   }
 
   private fromIsoDate(value: string): Date {
